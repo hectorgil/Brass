@@ -858,16 +858,16 @@ if( bao==1){
 
     for(i=0;i<i0bao;i++)
     {
-        errP0bao[i]=sqrt(errP0bao[i]/(Ncounter-1.));
+        errP0bao[i]=sqrt(errP0bao[i]/(Ncounter-1.))*sqrt(1./scaling_factor);
     }
     for(i=0;i<i2bao;i++)
     {
-        errP2bao[i]=sqrt(errP2bao[i]/(Ncounter-1.));
+        errP2bao[i]=sqrt(errP2bao[i]/(Ncounter-1.))*sqrt(1./scaling_factor);
 
     }
     for(i=0;i<i4bao;i++)
     {
-        errP4bao[i]=sqrt(errP4bao[i]/(Ncounter-1.));
+        errP4bao[i]=sqrt(errP4bao[i]/(Ncounter-1.))*sqrt(1./scaling_factor);
     }
 }
 
@@ -896,16 +896,16 @@ if( rsd==1){
 
     for(i=0;i<i0rsd;i++)
     {
-        errP0rsd[i]=sqrt(errP0rsd[i]/(Ncounter-1.));
+        errP0rsd[i]=sqrt(errP0rsd[i]/(Ncounter-1.))*sqrt(1./scaling_factor);
     }
     for(i=0;i<i2rsd;i++)
     {
-        errP2rsd[i]=sqrt(errP2rsd[i]/(Ncounter-1.));
+        errP2rsd[i]=sqrt(errP2rsd[i]/(Ncounter-1.))*sqrt(1./scaling_factor);
 
     }
     for(i=0;i<i4rsd;i++)
     {
-        errP4rsd[i]=sqrt(errP4rsd[i]/(Ncounter-1.));
+        errP4rsd[i]=sqrt(errP4rsd[i]/(Ncounter-1.))*sqrt(1./scaling_factor);
     }
 
 
