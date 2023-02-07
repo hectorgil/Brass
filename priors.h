@@ -1,5 +1,5 @@
-void set_proposal_mean(double mean[], int N);
+void set_proposal_mean(double mean[], int N, char *type_of_analysis, char *fit_BAO, char *do_power_spectrum, char *do_bispectrum, char *Sigma_def_type, char *Sigma_independent, double *Sigma_type, char *local_b2s2, char *local_b3nl, char *fog_free, char *fogmodel_ps, char *fog_bs, char *sigma8_free, char *RSD_fit, int Nchunks, int Npolynomial, char *path,char *id);
 
-void set_proposal_error(double error[], int N);
+void set_proposal_error(double error[], int N, char *type_of_analysis, char *fit_BAO, char *do_power_spectrum, char *do_bispectrum, char *Sigma_def_type, char *Sigma_independent, double *Sigma_type, char *local_b2s2, char *local_b3nl, char *fog_free, char *fogmodel_ps, char *fog_bs, char *sigma8_free, char *RSD_fit, int Nchunks, int Npolynomial, char *path,char *id);
 
-void set_mcmc_priors(double alpha_min, double alpha_max, double params_low[], double params_high[],int N);
+void set_mcmc_priors(double alpha_min, double alpha_max, double params_low[], double params_high[],int N,char *type_of_analysis, char *fit_BAO, char *do_power_spectrum, char *do_bispectrum, char *Sigma_def_type, char *Sigma_independent, double *Sigma_type, char *local_b2s2, char *local_b3nl, char *fog_free, char *fogmodel_ps,  char *fog_bs, char *sigma8_free, char *RSD_fit, int Nchunks, int Npolynomial, char *path,char *id);

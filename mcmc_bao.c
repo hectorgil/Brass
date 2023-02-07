@@ -18,6 +18,7 @@
 #include "structures.h"
 #include "integrals_rsd.h"
 #include "cubature.h"
+#include "bispectrum.h"
 #define Pi (4.*atan(1.))
 
 void set_parameters_convergence(double parameters_convergence[])
@@ -58,7 +59,6 @@ params[1]=Nburnin;
 
 void do_log_file(int nthreads, char *path_output, char *name_file,int Nparams,long int lines,double time_run,long int abs_counter,long int j_run,long int Nburnout,char *identifier, double mean_params[],double min_params[])
 {
-//CHECK THIS FUNCTION FOR NEW TEMPLATE WITH SIGMAS
 FILE *f;
 long int i,j,l,l1,l2;
 long int min_lines;
@@ -149,23 +149,23 @@ f=fopen(name_out,"a");
 fprintf(f,"\nMean parameters\n");
 for(l=0;l<Nparams;l++)
 {
-fprintf(f,"A[%ld]= %lf pm %lf\n",l,mean_params[l],sqrt(error[l][l]));
+fprintf(f,"A[%ld]= %e pm %e\n",l,mean_params[l],sqrt(error[l][l]));
 }
 
 fprintf(f,"\nBest-fitting parameters\n");
 for(l=0;l<Nparams;l++)
 {
-fprintf(f,"A[%ld]= %lf\n",l,min_params[l]);
+fprintf(f,"A[%ld]= %e\n",l,min_params[l]);
 }
-fprintf(f,"chi2_min= %lf\n\n",chi2_min);
+fprintf(f,"chi2_min= %e\n\n",chi2_min);
 
 fprintf(f,"\nCross-Covariance parameters\n");
 for(l1=0;l1<Nparams;l1++)
 {
    for(l2=0;l2<Nparams;l2++)
    {
-if(l2>=l1){fprintf(f,"%lf\t",error[l1][l2]/sqrt(error[l1][l1]*error[l2][l2]));}
-else{fprintf(f,"%lf\t",error[l2][l1]/sqrt(error[l1][l1]*error[l2][l2]));}
+if(l2>=l1){fprintf(f,"%e\t",error[l1][l2]/sqrt(error[l1][l1]*error[l2][l2]));}
+else{fprintf(f,"%e\t",error[l2][l1]/sqrt(error[l1][l1]*error[l2][l2]));}
 
 if(l2==Nparams-1){fprintf(f,"\n");}
 
@@ -291,23 +291,23 @@ f=fopen(name_out,"a");
 fprintf(f,"Mean parameters\n");
 for(l=0;l<Nparams;l++)
 {
-fprintf(f,"A[%ld]= %lf pm %lf\n",l,mean_params[l],sqrt(error[l][l]));
+fprintf(f,"A[%ld]= %e pm %e\n",l,mean_params[l],sqrt(error[l][l]));
 }
 
 fprintf(f,"\nBest-fitting parameters\n");
 for(l=0;l<Nparams;l++)
 {
-fprintf(f,"A[%ld]= %lf\n",l,min_params[l]);
+fprintf(f,"A[%ld]= %e\n",l,min_params[l]);
 }
-fprintf(f,"chi2_min= %lf\n\n",chi2_min);
+fprintf(f,"chi2_min= %e\n\n",chi2_min);
 
 fprintf(f,"\nCross-Covariance parameters\n");
 for(l1=0;l1<Nparams;l1++)
 {
    for(l2=0;l2<Nparams;l2++)
    {
-if(l2>=l1){fprintf(f,"%lf\t",error[l1][l2]/sqrt(error[l1][l1]*error[l2][l2]));}
-else{fprintf(f,"%lf\t",error[l2][l1]/sqrt(error[l1][l1]*error[l2][l2]));}
+if(l2>=l1){fprintf(f,"%e\t",error[l1][l2]/sqrt(error[l1][l1]*error[l2][l2]));}
+else{fprintf(f,"%e\t",error[l2][l1]/sqrt(error[l1][l1]*error[l2][l2]));}
 
 if(l2==Nparams-1){fprintf(f,"\n");}
 
@@ -572,9 +572,11 @@ apply_mask(type_of_analysis,modeP0, modeP2, modeP4, k_theo,P_theo0, P_theo2, P_t
 }
 */
 
-void do_Ptheo_multiple_aniso(char *type_BAO_fit, char *type_of_analysis, char *fit_BAO,int modeP0,int modeP2,int modeP4, double k_theo[],double k_theo0[], double k_theo2[],double k_theo4[], double P_theo0[], double P_theo2[], double P_theo4[],int NeffP0,int NeffP2,int NeffP4,int factor_for_sampling, double *parameters1,double *k_Plin,double *Plin,int Nlin, double *k_Olin, double *Olin, int NOlin, double Sigma_smooth,double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k0[], double k2[], double k4[], int Npoly, fftw_plan plan1, fftw_plan plan2, double kmin_theo, double kmax_theo, double k0min , double k0max,double k2min, double k2max,double k4min, double k4max, int wiggle, char *spacing_data,char *spacing_theory)
+void do_Ptheo_multiple_aniso(char *type_BAO_fit, char *type_of_analysis, char *fit_BAO,int modeP0,int modeP2,int modeP4, double k_theo[],double k_theo0[], double k_theo2[],double k_theo4[], double P_theo0[], double P_theo2[], double P_theo4[],int NeffP0,int NeffP2,int NeffP4,int factor_for_sampling, double *parameters1,double *k_Plin,double *Plin,int Nlin, double *k_Olin, double *Olin, int NOlin, double Sigma_smooth,double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k0[], double k2[], double k4[], int Npoly, fftw_plan plan1, fftw_plan plan2, double kmin_theo, double kmax_theo, double k0min , double k0max,double k2min, double k2max,double k4min, double k4max, int wiggle, char *spacing_data,char *spacing_theory, char *mask_matrix, double **MatrixBAO_mask)
 {
-
+double params[2];
+int params_int[2];
+int factor;
 int i,j;
 double ptheo,ptheo2,ptheo4,k,junk;
 double XMIN1[1]={-1};
@@ -584,6 +586,17 @@ int Nelements;
 int NeffP;
 int NeffP_max;
 double kmax,kmin;
+double *vector_matrix_in;
+int i_vector_matrix,Nin,Nout;
+
+if(strcmp(spacing_data,"irregular") == 0){factor=1;}
+else{factor=factor_for_sampling;}
+
+get_kmin_kmax(params,modeP0,modeP2,modeP4,k0min,k0max,k2min,k2max,k4min,k4max);
+kmax=params[1];
+kmin=params[0];
+
+/*
 if(k0max>=k2max && modeP0==1 && modeP2==1){kmax=k0max;}
 if(k0max>=k4max && modeP0==1 && modeP4==1){kmax=k0max;}
 
@@ -605,7 +618,13 @@ if(k4min<=k2min && modeP4==1 && modeP2==1){kmin=k4min;}
 if(modeP0==1 && modeP2==0 && modeP4==0){kmax=k0max;kmin=k0min;}
 if(modeP2==1 && modeP0==0 && modeP4==0){kmax=k2max;kmin=k2min;}
 if(modeP4==1 && modeP2==0 && modeP0==0){kmax=k4max;kmin=k4min;}
+*/
 
+get_NeffP(params_int, NeffP0, NeffP2, NeffP4, spacing_data, kmin, kmax, k0min, k0max, k2min, k2max, k4min, k4max,Nlin);
+NeffP_max=params_int[1];
+NeffP=params_int[0]*factor;
+
+/*
 NeffP=0;
 if(strcmp(spacing_data,"linear") == 0){
 
@@ -614,16 +633,16 @@ if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(k2min/(k2max-k2min)*(Nef
 if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+25-2+(int)(k4min/(k4max-k4min)*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
 }
 if(strcmp(spacing_data,"log") == 0){
-if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+25-2+(int)(log(k0min)/(log(k0max)-log(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
-if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(log(k2min)/(log(k2max)-log(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
-if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+25-2+(int)(log(k4min)/(log(k4max)-log(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
+if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+60-2+(int)(log(k0min)/(log(k0max)-log(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
+if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+60-2+(int)(log(k2min)/(log(k2max)-log(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
+if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+60-2+(int)(log(k4min)/(log(k4max)-log(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
 }
 
 if(strcmp(spacing_data,"log10") == 0){
 
-if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+25-2+(int)(log10(k0min)/(log10(k0max)-log10(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
-if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(log10(k2min)/(log10(k2max)-log10(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
-if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+25-2+(int)(log10(k4min)/(log10(k4max)-log10(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
+if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+60-2+(int)(log10(k0min)/(log10(k0max)-log10(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
+if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+60-2+(int)(log10(k2min)/(log10(k2max)-log10(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
+if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+60-2+(int)(log10(k4min)/(log10(k4max)-log10(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
 
 }
 
@@ -632,11 +651,23 @@ if(strcmp(spacing_data,"irregular") == 0){
 NeffP=Nlin;
 
 }
-if(NeffP==0){printf("Warning, crossing intervals among P0 (%lf<k<%lf), P2 (%lf<k<%lf), P4 (%lf<k<%lf) make impossible to determine NeffP within mask application. Fix this\n",k0min,k0max,k2min,k2max,k4min,k4max);exit(0);}
-NeffP0=NeffP0*modeP0;
-NeffP2=NeffP2*modeP2;
-NeffP4=NeffP4*modeP4;
 
+
+if(NeffP==0){printf("Warning, crossing intervals among P0 (%lf<k<%lf), P2 (%lf<k<%lf), P4 (%lf<k<%lf) make impossible to determine NeffP within mask application. Fix this\n",k0min,k0max,k2min,k2max,k4min,k4max);exit(0);}
+*/
+//NeffP0=NeffP0*modeP0;
+//NeffP2=NeffP2*modeP2;
+//NeffP4=NeffP4*modeP4;
+
+if(strcmp(path_to_mask1, "none") != 0){Nelements=NeffP;}
+else{Nelements=NeffP0*modeP0;}
+
+if(  strcmp(mask_matrix,"yes") == 0){
+Nin=Nelements*(modeP0+modeP2+modeP4);
+Nout=NeffP0*modeP0+NeffP2*modeP2+NeffP4*modeP4;
+vector_matrix_in = (double*) calloc( Nin, sizeof(double));
+}
+//printf("%d %d\n",Nin,Nout);
         f_params *function_parameters;
 
         function_parameters = (f_params *) malloc(sizeof(f_params));
@@ -655,9 +686,15 @@ NeffP4=NeffP4*modeP4;
 (*function_parameters).modeP2=modeP2;
 (*function_parameters).modeP4=modeP4;
 (*function_parameters).spacing=spacing_theory;
-if(strcmp(path_to_mask1, "none") != 0){Nelements=NeffP;}
-else{Nelements=NeffP0;}
 
+    for(j=0;j<Nelements;j++)
+    {
+    if(strcmp(path_to_mask1, "none") != 0){
+     k_theo[j]=get_ktheo(spacing_data,j,kmin,kmax,NeffP_max,factor_for_sampling,k_Plin,NULL);
+     }
+     }
+
+i_vector_matrix=0;
 if(modeP0==1)
 {
 
@@ -665,28 +702,30 @@ if(modeP0==1)
     {
     if(strcmp(path_to_mask1, "none") != 0){
 
-if(strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"log") == 0){k_theo[j]=exp(  (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"log10") == 0){k_theo[j]=pow(10,  (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//k_theo[j]=get_ktheo(spacing_data,j,kmin,kmax,NeffP_max,factor_for_sampling,k_Plin,NULL);
+(*function_parameters).kinput=k_theo[j];k=k_theo[j];
+//if(strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"log") == 0){k_theo[j]=kmin*exp(  log(kmin)-10*(log(kmax)-log(kmin))/(NeffP_max-1.)+ (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"log10") == 0){k_theo[j]=kmin*pow(10,  log10(kmin)-10*(log10(kmax)-log10(kmin))/(NeffP_max-1.)+ (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
 
 }
        else{k_theo0[j]=k0[j];(*function_parameters).kinput=k_theo0[j];k=k0[j];}
 
          (*function_parameters).mode=0;
          adapt_integrate(1,integralPaniso,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&ptheo,&junk);
-for(i=1;i<Npoly+1;i++){ptheo=ptheo+parameters1[5+i]*pow(k,2-i);}
+         for(i=1;i<Npoly+1;i++){ptheo=ptheo+parameters1[5+i]*pow(k,2-i);}
 
 
-         P_theo0[j]=ptheo;
-
+         if(  strcmp(mask_matrix,"no") == 0){P_theo0[j]=ptheo;}
+         if(  strcmp(mask_matrix,"yes") == 0){vector_matrix_in[i_vector_matrix]=ptheo;i_vector_matrix++;}
 
     }
 
 }
 
 if(strcmp(path_to_mask1, "none") != 0){Nelements=NeffP;}
-else{Nelements=NeffP2;}
+else{Nelements=NeffP2*modeP2;}
 
 if(modeP2==1)
 {
@@ -695,10 +734,13 @@ if(modeP2==1)
     {
     if(strcmp(path_to_mask1, "none") != 0){
 
-if(strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"log") == 0){k_theo[j]=exp(  (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"log10") == 0){k_theo[j]=pow(10,  (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//k_theo[j]=get_ktheo(spacing_data,j,kmin,kmax,NeffP_max,factor_for_sampling,k_Plin,NULL);
+(*function_parameters).kinput=k_theo[j];k=k_theo[j];
+
+//if(strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"log") == 0){k_theo[j]=kmin*exp(  (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"log10") == 0){k_theo[j]=kmin*pow(10,  (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
 
 
 }
@@ -708,24 +750,27 @@ if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*func
          adapt_integrate(1,integralPaniso,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&ptheo,&junk);
 for(i=1;i<Npoly+1;i++){ptheo=ptheo+parameters1[5+i+(Npoly)*modeP0]*pow(k,2-i);}
 
-         P_theo2[j]=ptheo;
-
+         if(  strcmp(mask_matrix,"no") == 0){P_theo2[j]=ptheo;}
+         if(  strcmp(mask_matrix,"yes") == 0){vector_matrix_in[i_vector_matrix]=ptheo;i_vector_matrix++;}
     }
 
 }
 
 if(strcmp(path_to_mask1, "none") != 0){Nelements=NeffP;}
-else{Nelements=NeffP4;}
+else{Nelements=NeffP4*modeP4;}
 
 if(modeP4==1)
 {
     for(j=0;j<Nelements;j++)
     {
   if(strcmp(path_to_mask1, "none") != 0){
-if(strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"log") == 0){k_theo[j]=exp(  (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"log10") == 0){k_theo[j]=pow(10,  (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
-if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+
+//k_theo[j]=get_ktheo(spacing_data,j,kmin,kmax,NeffP_max,factor_for_sampling,k_Plin,NULL);
+(*function_parameters).kinput=k_theo[j];k=k_theo[j];
+//if(strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"log") == 0){k_theo[j]=kmin*exp(  (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"log10") == 0){k_theo[j]=kmin*pow(10,  (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling) );k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
+//if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*function_parameters).kinput=k_theo[j];}
 
 }
        else{k_theo4[j]=k4[j];(*function_parameters).kinput=k_theo4[j];k=k4[j];}
@@ -735,8 +780,8 @@ if(strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];k=k_theo[j];(*func
 
 for(i=1;i<Npoly+1;i++){ptheo=ptheo+parameters1[5+i+(Npoly)*modeP0+(Npoly)*modeP2]*pow(k,2-i);}
 
-         P_theo4[j]=ptheo;
-
+         if(  strcmp(mask_matrix,"no") == 0){P_theo4[j]=ptheo;}
+         if(  strcmp(mask_matrix,"yes") == 0){vector_matrix_in[i_vector_matrix]=ptheo;i_vector_matrix++;}
     }
 
 }
@@ -747,15 +792,26 @@ for(i=1;i<Npoly+1;i++){ptheo=ptheo+parameters1[5+i+(Npoly)*modeP0+(Npoly)*modeP2
 free(function_parameters);
 if(strcmp(path_to_mask1, "none") != 0)
 {
-apply_mask(type_of_analysis,modeP0, modeP2, modeP4, k_theo,P_theo0, P_theo2, P_theo4,NeffP, pos, W0, W2, W4, W6, W8, Nmask,spacing_mask, plan1, plan2, k_theo[0], k_theo[NeffP-1], k0min, k0max, k2min, k2max, k4min, k4max,spacing_data,Sigma_smooth,1);
+if(  strcmp(mask_matrix,"no") == 0){apply_mask(type_of_analysis,modeP0, modeP2, modeP4, k_theo,P_theo0, P_theo2, P_theo4,NeffP, pos, W0, W2, W4, W6, W8, Nmask,spacing_mask, plan1, plan2, k_theo[0], k_theo[NeffP-1], k0min, k0max, k2min, k2max, k4min, k4max,spacing_data,Sigma_smooth,1);}
+
+if(  strcmp(mask_matrix,"yes") == 0){
+apply_mask_matrix( P_theo0,P_theo2,P_theo4,MatrixBAO_mask,vector_matrix_in,Nin,Nout, modeP0, modeP2, modeP4,NeffP0,NeffP2,NeffP4,type_of_analysis);
+free(vector_matrix_in);
 }
+
+}
+
+
 }
 
 
 
-void do_Ptheo_multiple_iso(char *type_BAO_fit, char *type_of_analysis, char *fit_BAO,int modeP0,int modeP2,int modeP4, double k_theo[],double k_theo0[], double k_theo2[], double k_theo4[], double P_theo0[], double P_theo2[], double P_theo4[],int NeffP0, int NeffP2, int NeffP4,int factor_for_sampling, double *parameters1,double *k_Plin,double *Plin,int Nlin, double *k_Olin, double *Olin, int NOlin,double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask,char *path_to_mask1,double k0[], double k2[], double k4[], int Npoly, fftw_plan plan1, fftw_plan plan2, double kmin_theo , double kmax_theo, double k0min , double k0max,double k2min, double k2max,double k4min, double k4max, int wiggle, char *spacing_data, char *spacing_theory, double Sigma_smooth)
+void do_Ptheo_multiple_iso(char *type_BAO_fit, char *type_of_analysis, char *fit_BAO,int modeP0,int modeP2,int modeP4, double k_theo[],double k_theo0[], double k_theo2[], double k_theo4[], double P_theo0[], double P_theo2[], double P_theo4[],int NeffP0, int NeffP2, int NeffP4,int factor_for_sampling, double *parameters1,double *k_Plin,double *Plin,int Nlin, double *k_Olin, double *Olin, int NOlin,double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask,char *path_to_mask1,double k0[], double k2[], double k4[], int Npoly, fftw_plan plan1, fftw_plan plan2, double kmin_theo , double kmax_theo, double k0min , double k0max,double k2min, double k2max,double k4min, double k4max, int wiggle, char *spacing_data, char *spacing_theory, double Sigma_smooth, char *mask_matrix, double **MatrixBAO_mask)
 {
 //if wiggle=0 no wiggle in the function. if wiggle=1 wiggle
+int factor;
+double params[2];
+int params_int[2];
 int i,j;
 double func0,func2,func4,olin_eff0,olin_eff2,olin_eff4;
 double sigma_nl0,sigma_nl2,sigma_nl4;
@@ -769,13 +825,21 @@ int NeffP_max;
 int Nlin1;
 double w0lin,w1lin,w2lin;
 int interpolation_order,shiftN;
+double *vector_matrix_in;
+int i_vector_matrix,Nin,Nout;
+
+if(strcmp(spacing_data,"irregular") == 0){factor=1;}
+else{factor=factor_for_sampling;}
 
 interpolation_order=1;
 
     if(interpolation_order==1){shiftN=1;}
     if(interpolation_order==2){shiftN=2;}
 
-
+get_kmin_kmax(params,modeP0,modeP2,modeP4,k0min,k0max,k2min,k2max,k4min,k4max);
+kmax=params[1];
+kmin=params[0];
+/*
 if(k0max>=k2max && modeP0==1 && modeP2==1){kmax=k0max;}
 if(k0max>=k4max && modeP0==1 && modeP4==1){kmax=k0max;}
 
@@ -797,7 +861,12 @@ if(k4min<=k2min && modeP4==1 && modeP2==1){kmin=k4min;}
 if(modeP0==1 && modeP2==0 && modeP4==0){kmax=k0max;kmin=k0min;}
 if(modeP2==1 && modeP0==0 && modeP4==0){kmax=k2max;kmin=k2min;}
 if(modeP4==1 && modeP2==0 && modeP0==0){kmax=k4max;kmin=k4min;}
+*/
 
+get_NeffP(params_int, NeffP0, NeffP2, NeffP4, spacing_data, kmin, kmax, k0min, k0max, k2min, k2max, k4min, k4max,Nlin);
+NeffP_max=params_int[1];
+NeffP=params_int[0]*factor;
+/*
 NeffP=0;
 //if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+25-2+(int)(k0min/(k0max-k0min)*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
 //if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(k2min/(k2max-k2min)*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
@@ -810,16 +879,16 @@ if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(k2min/(k2max-k2min)*(Nef
 if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+25-2+(int)(k4min/(k4max-k4min)*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
 }
 if(strcmp(spacing_data,"log") == 0){
-if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+25-2+(int)(log(k0min)/(log(k0max)-log(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
-if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(log(k2min)/(log(k2max)-log(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
-if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+25-2+(int)(log(k4min)/(log(k4max)-log(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
+if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+60-2+(int)(log(k0min)/(log(k0max)-log(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
+if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+60-2+(int)(log(k2min)/(log(k2max)-log(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
+if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+60-2+(int)(log(k4min)/(log(k4max)-log(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
 }
 
 if(strcmp(spacing_data,"log10") == 0){
 
-if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+25-2+(int)(log10(k0min)/(log10(k0max)-log10(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
-if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+25-2+(int)(log10(k2min)/(log10(k2max)-log10(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
-if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+25-2+(int)(log10(k4min)/(log10(k4max)-log10(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
+if(kmax==k0max && kmin==k0min){NeffP=(NeffP0+60-2+(int)(log10(k0min)/(log10(k0max)-log10(k0min))*(NeffP0-1.)))*factor_for_sampling;NeffP_max=NeffP0;}
+if(kmax==k2max && kmin==k2min){NeffP=(NeffP2+60-2+(int)(log10(k2min)/(log10(k2max)-log10(k2min))*(NeffP2-1.)))*factor_for_sampling;NeffP_max=NeffP2;}
+if(kmax==k4max && kmin==k4min){NeffP=(NeffP4+60-2+(int)(log10(k4min)/(log10(k4max)-log10(k4min))*(NeffP4-1.)))*factor_for_sampling;NeffP_max=NeffP4;}
 
 }
 
@@ -827,15 +896,13 @@ if(strcmp(spacing_data,"irregular") == 0){
 NeffP=Nlin;
 }
 
-
-
 if(NeffP==0){printf("Warning, crossing intervals among P0 (%lf<k<%lf), P2 (%lf<k<%lf), P4 (%lf<k<%lf) make impossible to determine NeffP within mask application. Fix this\n",k0min,k0max,k2min,k2max,k4min,k4max);exit(0);}
+*/
 
-//printf("NeffP=%d\n",NeffP);
+//NeffP0=NeffP0*modeP0;
+//NeffP2=NeffP2*modeP2;
+//NeffP4=NeffP4*modeP4;
 
-NeffP0=NeffP0*modeP0;
-NeffP2=NeffP2*modeP2;
-NeffP4=NeffP4*modeP4;
 
 Nmultipoles=0;
 if(modeP0==1){Nmultipoles++;}
@@ -865,25 +932,36 @@ else{
 
 }
 
-if(strcmp(path_to_mask1, "none") != 0){Nelements=NeffP;}
-else{
+if(strcmp(path_to_mask1, "none") != 0){Nelements=NeffP;}//mask
+else{//no-mask
 
-if(NeffP0>=NeffP2 && NeffP0>=NeffP4){Nelements=NeffP0;}
-if(NeffP2>=NeffP0 && NeffP2>=NeffP4){Nelements=NeffP2;}
-if(NeffP4>=NeffP0 && NeffP4>=NeffP2){Nelements=NeffP4;}
+if(NeffP0*modeP0>=NeffP2*modeP2 && NeffP0*modeP0>=NeffP4*modeP4){Nelements=NeffP0*modeP0;}
+if(NeffP2*modeP2>=NeffP0*modeP0 && NeffP2*modeP2>=NeffP4*modeP4){Nelements=NeffP2*modeP2;}
+if(NeffP4*modeP4>=NeffP0*modeP0 && NeffP4*modeP4>=NeffP2*modeP2){Nelements=NeffP4*modeP4;}
 
 }
 
+//printf("%d %d %d (%lf,%lf)\n",Nelements,factor_for_sampling,NeffP_max,kmin,kmax);
+
+
+if(  strcmp(mask_matrix,"yes") == 0){
+Nin=Nelements*(modeP0+modeP2+modeP4);
+Nout=NeffP0*modeP0+NeffP2*modeP2+NeffP4*modeP4;
+vector_matrix_in = (double*) calloc( Nin, sizeof(double));
+}
+
+i_vector_matrix=0;
     for(j=0;j<Nelements;j++)
     {
 //if(strcmp(path_to_mask1, "none") != 0){k_theo[j]=k_Plin[j];plin=Plin[j];kused=k_theo[j];}
-if(strcmp(path_to_mask1, "none") != 0){
+if(strcmp(path_to_mask1, "none") != 0){//mask
 
+k_theo[j]=get_ktheo(spacing_data,j,kmin,kmax,NeffP_max,factor_for_sampling,k_Plin,NULL);kused=k_theo[j];
 
-if( strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);kused=k_theo[j];}
-if( strcmp(spacing_data,"log") == 0){k_theo[j]=exp(  (j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling));kused=k_theo[j];}
-if( strcmp(spacing_data,"log10") == 0){k_theo[j]=pow( 10, (j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling));kused=k_theo[j];}
-if( strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];kused=k_theo[j];}
+//if( strcmp(spacing_data,"linear") == 0){k_theo[j]=(j+0.5)*(kmax-kmin)/((NeffP_max-1.)*factor_for_sampling);kused=k_theo[j];}
+//if( strcmp(spacing_data,"log") == 0){k_theo[j]=exp( log(kmin)-10*(log(kmax)-log(kmin))/(NeffP_max-1.)+(j+0.5)*(log(kmax)-log(kmin))/((NeffP_max-1.)*factor_for_sampling));kused=k_theo[j];}
+//if( strcmp(spacing_data,"log10") == 0){k_theo[j]=pow( 10,  log10(kmin)-10*(log10(kmax)-log10(kmin))/(NeffP_max-1.)+(j+0.5)*(log10(kmax)-log10(kmin))/((NeffP_max-1.)*factor_for_sampling));kused=k_theo[j];}
+//if( strcmp(spacing_data,"irregular") == 0){k_theo[j]=k_Plin[j];kused=k_theo[j];}
 
 
 
@@ -903,9 +981,9 @@ plin=P_interpol_fast(kused,Plin,Nlin,spacing_theory,interpolation_order,Nlin1,w0
 }
 else{  
 
-if(NeffP0>=NeffP2 && NeffP0>=NeffP4){kused=k0[j];/*plin=P_interpol(kused,k_Plin,Plin,Nlin);*/}
-if(NeffP2>=NeffP0 && NeffP2>=NeffP4){kused=k2[j];/*plin=P_interpol(kused,k_Plin,Plin,Nlin);*/}
-if(NeffP4>=NeffP0 && NeffP4>=NeffP2){kused=k4[j];/*plin=P_interpol(kused,k_Plin,Plin,Nlin);*/}
+if(NeffP0*modeP0>=NeffP2*modeP2 && NeffP0*modeP0>=NeffP4*modeP4){kused=k0[j];/*plin=P_interpol(kused,k_Plin,Plin,Nlin);*/}
+if(NeffP2*modeP2>=NeffP0*modeP0 && NeffP2*modeP2>=NeffP4*modeP4){kused=k2[j];/*plin=P_interpol(kused,k_Plin,Plin,Nlin);*/}
+if(NeffP4*modeP4>=NeffP0*modeP0 && NeffP4*modeP4>=NeffP2*modeP2){kused=k4[j];/*plin=P_interpol(kused,k_Plin,Plin,Nlin);*/}
 
 
     Nlin1=determine_N_singlearray(k_Plin,kused,Nlin,spacing_theory);
@@ -1029,23 +1107,37 @@ if(wiggle==0){olin_eff0=1;olin_eff2=1;olin_eff4=1;}
 
        
 if(strcmp(fit_BAO, "P0") == 0){
-          P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));if(strcmp(path_to_mask1, "none") == 0){k_theo0[j]=k0[j];}
+          if(  strcmp(mask_matrix,"no") == 0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));}
+          if(  strcmp(mask_matrix,"yes") == 0){vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg0));i_vector_matrix++;}
+
+          if(strcmp(path_to_mask1, "none") == 0){k_theo0[j]=k0[j];}
 }
 if(strcmp(fit_BAO, "P2") == 0){
-          P_theo2[j]=func0*(1.+(olin_eff0-1)*exp(arg0));if(strcmp(path_to_mask1, "none") == 0){k_theo2[j]=k2[j];}
+          if(  strcmp(mask_matrix,"no") == 0){P_theo2[j]=func0*(1.+(olin_eff0-1)*exp(arg0));}
+          if(  strcmp(mask_matrix,"yes") == 0){vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg0));i_vector_matrix++;}
+          if(strcmp(path_to_mask1, "none") == 0){k_theo2[j]=k2[j];}
 }
 if(strcmp(fit_BAO, "P4") == 0){
-          P_theo4[j]=func0*(1.+(olin_eff0-1)*exp(arg0));if(strcmp(path_to_mask1, "none") == 0){k_theo4[j]=k4[j];}
+          if(  strcmp(mask_matrix,"no") == 0){P_theo4[j]=func0*(1.+(olin_eff0-1)*exp(arg0));}
+          if(  strcmp(mask_matrix,"yes") == 0){vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg0));i_vector_matrix++;}
+          if(strcmp(path_to_mask1, "none") == 0){k_theo4[j]=k4[j];}
 }
 if(strcmp(fit_BAO, "P02") == 0){
 
 if(strcmp(path_to_mask1, "none") != 0){
+       if(  strcmp(mask_matrix,"no") == 0){
           P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));
-          P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));
+          P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));}
+          if(  strcmp(mask_matrix,"yes") == 0){
+          vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg0));
+          vector_matrix_in[i_vector_matrix+Nelements]=func2*(1.+(olin_eff2-1)*exp(arg2));
+          i_vector_matrix++;}
+
+
 }
 else{
-if(j<NeffP0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));k_theo0[j]=k0[j];}
-if(j<NeffP2){P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));k_theo2[j]=k2[j];}
+if(j<NeffP0*modeP0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));k_theo0[j]=k0[j];}
+if(j<NeffP2*modeP2){P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));k_theo2[j]=k2[j];}
 }
 
 
@@ -1054,19 +1146,31 @@ if(j<NeffP2){P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));k_theo2[j]=k2[j];}
 if(strcmp(fit_BAO, "P04") == 0){
 
 if(strcmp(path_to_mask1, "none") != 0){
+ if(  strcmp(mask_matrix,"no") == 0){
           P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));
-          P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));
+          P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));}
+ if(  strcmp(mask_matrix,"yes") == 0){
+          vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg0));
+          vector_matrix_in[i_vector_matrix+Nelements]=func2*(1.+(olin_eff2-1)*exp(arg4));
+      i_vector_matrix++;}
 }
 else{
-if(j<NeffP0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));k_theo0[j]=k0[j];}
-if(j<NeffP4){P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));k_theo4[j]=k4[j];}
+if(j<NeffP0*modeP0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));k_theo0[j]=k0[j];}
+if(j<NeffP4*modeP4){P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));k_theo4[j]=k4[j];}
 }
 }
 if(strcmp(fit_BAO, "P24") == 0){
 
 if(strcmp(path_to_mask1, "none") != 0){
+ if(  strcmp(mask_matrix,"no") == 0){
           P_theo2[j]=func0*(1.+(olin_eff0-1)*exp(arg2));
-          P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));
+          P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));}
+
+ if(  strcmp(mask_matrix,"yes") == 0){
+          vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg2));
+          vector_matrix_in[i_vector_matrix+Nelements]=func2*(1.+(olin_eff2-1)*exp(arg4));
+      i_vector_matrix++;}
+
 }
 else{
 if(j<NeffP2){P_theo2[j]=func0*(1.+(olin_eff0-1)*exp(arg2));k_theo2[j]=k2[j];}
@@ -1076,14 +1180,24 @@ if(j<NeffP4){P_theo4[j]=func2*(1.+(olin_eff2-1)*exp(arg4));k_theo4[j]=k4[j];}
 }
 if(strcmp(fit_BAO, "P024") == 0){
 if(strcmp(path_to_mask1, "none") != 0){
+ if(  strcmp(mask_matrix,"no") == 0){
           P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));
           P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));
-          P_theo4[j]=func4*(1.+(olin_eff4-1)*exp(arg4));
+          P_theo4[j]=func4*(1.+(olin_eff4-1)*exp(arg4));}
+
+ if(  strcmp(mask_matrix,"yes") == 0){
+
+          vector_matrix_in[i_vector_matrix]=func0*(1.+(olin_eff0-1)*exp(arg0));
+          vector_matrix_in[i_vector_matrix+Nelements]=func2*(1.+(olin_eff2-1)*exp(arg2));
+          vector_matrix_in[i_vector_matrix+2*Nelements]=func4*(1.+(olin_eff4-1)*exp(arg4));
+
+      i_vector_matrix++;}
+
 }
 else{
-if(j<NeffP0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));k_theo0[j]=k0[j];}
-if(j<NeffP2){P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));k_theo2[j]=k2[j];}
-if(j<NeffP4){P_theo4[j]=func4*(1.+(olin_eff4-1)*exp(arg4));k_theo4[j]=k4[j];}
+if(j<NeffP0*modeP0){P_theo0[j]=func0*(1.+(olin_eff0-1)*exp(arg0));k_theo0[j]=k0[j];}
+if(j<NeffP2*modeP2){P_theo2[j]=func2*(1.+(olin_eff2-1)*exp(arg2));k_theo2[j]=k2[j];}
+if(j<NeffP4*modeP4){P_theo4[j]=func4*(1.+(olin_eff4-1)*exp(arg4));k_theo4[j]=k4[j];}
 
 }
 }
@@ -1096,9 +1210,21 @@ if(j<NeffP4){P_theo4[j]=func4*(1.+(olin_eff4-1)*exp(arg4));k_theo4[j]=k4[j];}
 //for(i=0;i<Nelements;i++){printf("%lf %lf %lf\n",k_theo[i],P_theo0[i],P_theo2[i]);}
 //exit(0);
 
+//printf("k0=%lf, kmax=%lf, (kmax,kmin)=(%lf,%lf)\n",k_theo[0],k_theo[Nelements-1],kmax,kmin);
+//exit(0);
+
+
 if(strcmp(path_to_mask1, "none") != 0)
-{
-apply_mask(type_of_analysis,modeP0, modeP2, modeP4, k_theo,P_theo0, P_theo2, P_theo4,NeffP, pos, W0, W2, W4, W6, W8, Nmask,spacing_mask, plan1, plan2, k_theo[0], k_theo[NeffP-1], k0min, k0max, k2min, k2max, k4min, k4max,spacing_data,Sigma_smooth,1);
+{//printf("iso, %lf %lf %d\n",k_theo[0], k_theo[NeffP-1],NeffP);
+
+
+if(  strcmp(mask_matrix,"no") == 0){apply_mask(type_of_analysis,modeP0, modeP2, modeP4, k_theo,P_theo0, P_theo2, P_theo4,NeffP, pos, W0, W2, W4, W6, W8, Nmask,spacing_mask, plan1, plan2, k_theo[0], k_theo[NeffP-1], k0min, k0max, k2min, k2max, k4min, k4max,spacing_data,Sigma_smooth,1);}
+
+if(  strcmp(mask_matrix,"yes") == 0){
+apply_mask_matrix( P_theo0,P_theo2,P_theo4,MatrixBAO_mask,vector_matrix_in,Nin,Nout, modeP0, modeP2, modeP4,NeffP0,NeffP2,NeffP4,type_of_analysis);
+free(vector_matrix_in);
+}
+
 }
 
 //for(i=0;i<Nelements;i++){printf("%lf %lf %lf\n",k_theo[i],P_theo0[i],P_theo2[i]);}
@@ -1425,7 +1551,8 @@ if ((trial_mcmc==0) && (strcmp(ending, ".cov") == 0)){
   fclose(f);
   for(j=0;j<N_Cov_prop;j++)
   {
-   printf("Element %d x=%lf pm %lf\n",j,vector_cov_prop[j],sqrt(Cov_prop[j+j*N_Cov_prop]));
+//   printf("Element %d x=%lf pm %lf\n",j,vector_cov_prop[j],sqrt(Cov_prop[j+j*N_Cov_prop]));
+     printf("Element %d x=%e pm %e\n",j,vector_cov_prop[j],sqrt(Cov_prop[j+j*N_Cov_prop]));
   }
   
 }
@@ -1493,7 +1620,8 @@ else {
      for(j=0;j<N_Cov_prop;j++)
      {
        vector_cov_prop[j]=vector_cov_prop[j]/weighted_steps*1.;
-       printf("Element %d x=%lf pm %lf\n",j,vector_cov_prop[j],sqrt(Cov_prop[j+j*N_Cov_prop]));
+//       printf("Element %d x=%lf pm %lf\n",j,vector_cov_prop[j],sqrt(Cov_prop[j+j*N_Cov_prop]));
+         printf("Element %d x=%e pm %e\n",j,vector_cov_prop[j],sqrt(Cov_prop[j+j*N_Cov_prop]));
      }
 
   if(trial_mcmc==0){
@@ -1574,14 +1702,14 @@ fprintf(f,"#Mean parameters: \n");
 for(j=0;j<N_cov;j++)
 {
  vector_cov[j]=vector_cov[j]/weighted_steps*1.;
- fprintf(f,"%lf\n",vector_cov[j]);
+ fprintf(f,"%e\n",vector_cov[j]);
 }
 fprintf(f,"#Covariance Matrix: \n");
 for(j=0;j<N_cov;j++)
 {
    for(i=0;i<N_cov;i++)
    {
-     fprintf(f,"%lf\t",cov[j+i*N_cov]);
+     fprintf(f,"%e\t",cov[j+i*N_cov]);
    }
    fprintf(f,"\n");
 }
@@ -1590,20 +1718,20 @@ fclose(f);
 }
 
 
-void generate_rotation_matrix(int n,double *Cov_prop, double *vector_mean, gsl_matrix transform_inverse[], gsl_matrix transform[],int trial_mcmc)
+void generate_rotation_matrix(int n,double *Cov_prop, double *vector_mean, gsl_matrix transform_inverse[], gsl_matrix transform[],int trial_mcmc, char *type_of_analysis, char *fit_BAO, char *do_power_spectrum, char *do_bispectrum, char *Sigma_def_type, char *Sigma_independent, double *Sigma_type, char *local_b2s2, char *local_b3nl, char *fog_free, char *fogmodel_ps, char *fog_bs, char *sigma8_free, char *RSD_fit, int Nchunks, int Npolynomial, char *path,char *id)
 {
 int i,j;
 double eval_i;
 double tij,tinverseij;
 int s;
 double *error;
-
+double test;
 
 if(trial_mcmc==1)
 {
 error= (double*) calloc(n,sizeof(double));
 //call struct for inizializing errors
-set_proposal_error(error,n);
+set_proposal_error(error,n, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, local_b2s2, local_b3nl, fog_free, fogmodel_ps, fog_bs, sigma8_free, RSD_fit,  Nchunks,  Npolynomial, path, id);
 
           for(i=0;i<n;i++)
           {
@@ -1666,6 +1794,8 @@ else
 
                 tij=sqrt(gsl_vector_get (eval, j))*gsl_matrix_get (evec, i, j);//Rotation matrix^-1= S*R^-1, where S is sqrt(L), where L is unity with eigenvalues in diagonal. 
                 tinverseij=1./sqrt(gsl_vector_get (eval, i))*gsl_matrix_get (evec, j, i);//Rotation matrix^-1= S*R^-1, where S is sqrt(L), where L is unity with eigenvalues in diagonal. 
+                test=gsl_vector_get (eval, i);
+                 if( test<=0){printf("Fatal error, eval[%d]=%e. Can't be <=0. Exiting now...\n",i,test);exit(0);}
 
                 gsl_matrix_set (transform, i, j, tij);
                 gsl_matrix_set (transform_inverse, i, j, tinverseij);
@@ -1676,7 +1806,7 @@ else
   gsl_matrix_free (evec);
   gsl_vector_free (eval);
 
-printf("Proposal Covariance Ready...\n");
+printf("Proposal Covariance Ready ...\n");
 
           for(i=0;i<n;i++)
           {
@@ -1695,11 +1825,11 @@ else{printf("%e\t", gsl_matrix_get (transform_inverse, i, j) );}
 
 }
 
-//void mcmc_kernel(int nthreads, char *type_BAO_fit,char *type_of_analysis,int trial_mcmc,double **vector_buffer,double fraction, int N_Cov_prop, gsl_matrix *transform, gsl_matrix *transform_inverse, double *vector_mean, char *name_file_output_mcmc, char *fit_BAO,double *k_Plin,double *Plin,int N_Plin, double *k_Olin, double *Olin, int N_Olin, double *pos, double *W0, double *W2, double *W4,double *W6, double *W8,int Nmask, char *path_to_mask1, char *spacing_maskNGC, double *posSGC, double *W0SGC, double *W2SGC, double *W4SGC, double *W6SGC, double *W8SGC, int NmaskSGC, char *path_to_mask2, char *spacing_maskSGC,  double *k0, double *P0, double *errP0, int NeffP0, double *k2, double *P2, double *errP2, int NeffP2, double *k4, double *P4, double *errP4, int NeffP4, double *k11, double *k22, double *k33, double *B0, double *errB0, double *Bnoise, int NeffB0, double *k0SGC, double *P0SGC, double *errP0SGC,int NeffP0SGC, double *k2SGC, double *P2SGC, double *errP2SGC,int NeffP2SGC, double *k4SGC, double *P4SGC, double *errP4SGC,int NeffP4SGC, double *k11SGC, double *k22SGC, double *k33SGC,double *B0SGC, double *BnoiseSGC,int NeffB0SGC, double *cov, double *covSGC, double alpha_min, double alpha_max, char *Sigma_def_type, char *Sigma_independent, double ffactor, double Sigma_type[], double Sigma_nl_mean[], double Sigma_nl_stddev[], int Npolynomial, int Nchunks, char *path_output, char *identifier, char *do_plot, long int Nsteps, char *do_power_spectrum, char *do_bispectrum,int Nalphas,int Nsigmas_tot, int Nsigmas_free, double **Theory, double Pnoise, double PnoiseSGC, char *ptmodel_ps,  char *rsdmodel_ps,  char *fogmodel_ps,  char *ptmodel_bs,   char *local_b2s2,   char *local_b3nl,  char *RSD_fit,  char *sigma8_free,  char *fog_free,  char *fog_bs, double Sigma_smooth,int factor_sampling_mask,char *spacing_dataNGC,char *spacing_dataSGC,char *spacing_theory )
 
-void mcmc_kernel(int nthreads, char *type_BAO_fit,char *type_of_analysis,int trial_mcmc,double **vector_buffer,double fraction, int N_Cov_prop, gsl_matrix *transform, gsl_matrix *transform_inverse, double *vector_mean, char *name_file_output_mcmc, char *fit_BAO,char *fit_RSD,double *k_Plin,double *Plin,int N_Plin, double *k_Olin, double *Olin, int N_Olin, double *pos, double *W0, double *W2, double *W4,double *W6, double *W8,int Nmask, char *path_to_mask1, char *spacing_maskNGC, double *posSGC, double *W0SGC, double *W2SGC, double *W4SGC, double *W6SGC, double *W8SGC, int NmaskSGC, char *path_to_mask2, char *spacing_maskSGC,  double *k0bao, double *k0rsd, double *P0bao, double *P0rsd, double *errP0bao, double *errP0rsd, int NeffP0bao, int NeffP0rsd, double *k2bao, double *k2rsd, double *P2bao, double *P2rsd, double *errP2bao, double *errP2rsd, int NeffP2bao, int NeffP2rsd, double *k4bao, double *k4rsd, double *P4bao, double *P4rsd, double *errP4bao, double *errP4rsd, int NeffP4bao, int NeffP4rsd, double *k11bao, double *k11rsd, double *k22bao, double *k22rsd, double *k33bao, double *k33rsd, double *B0bao, double *B0rsd, double *errB0bao, double *errB0rsd, double *Bnoise_bao, double *Bnoise_rsd, int NeffB0bao, int NeffB0rsd, double *k0baoSGC, double *k0rsdSGC, double *P0baoSGC, double *P0rsdSGC, double *errP0baoSGC, double *errP0rsdSGC,int NeffP0baoSGC,int NeffP0rsdSGC, double *k2baoSGC,double *k2rsdSGC, double *P2baoSGC,double *P2rsdSGC, double *errP2baoSGC,double *errP2rsdSGC,int NeffP2baoSGC,int NeffP2rsdSGC, double *k4baoSGC, double *k4rsdSGC, double *P4baoSGC,double *P4rsdSGC, double *errP4baoSGC,double *errP4rsdSGC,int NeffP4baoSGC,int NeffP4rsdSGC, double *k11baoSGC,double *k11rsdSGC, double *k22baoSGC,double *k22rsdSGC, double *k33baoSGC,double *k33rsdSGC,double *B0baoSGC,double *B0rsdSGC, double *Bnoise_baoSGC, double *Bnoise_rsdSGC,int NeffB0baoSGC,int NeffB0rsdSGC, double *cov, double *covSGC, double alpha_min, double alpha_max, char *Sigma_def_type, char *Sigma_independent, double ffactor, double Sigma_type[], double Sigma_nl_mean[], double Sigma_nl_stddev[], int Npolynomial, int Nchunks, char *path_output, char *identifier, char *do_plot, long int Nsteps, char *do_power_spectrum, char *do_bispectrum,int Nalphas,int Nsigmas_tot, int Nsigmas_free, double **Theory, int Ntheory, double Pnoise, double PnoiseSGC, char *ptmodel_ps,  char *rsdmodel_ps,  char *fogmodel_ps,  char *ptmodel_bs,   char *local_b2s2,   char *local_b3nl,  char *RSD_fit,  char *sigma8_free,  char *fog_free,  char *fog_bs, double Sigma_smooth,int factor_sampling_mask,char *spacing_dataNGC_bao,char *spacing_dataNGC_rsd,char *spacing_dataSGC_bao,char *spacing_dataSGC_rsd,char *spacing_theory_bao,char *spacing_theory_rsd,char *type_of_analysis_BAO,char *type_of_analysis_FS )
+void mcmc_kernel(int nthreads, char *type_BAO_fit,char *type_of_analysis,int trial_mcmc,double **vector_buffer,double fraction, int N_Cov_prop, gsl_matrix *transform, gsl_matrix *transform_inverse, double *vector_mean, char *name_file_output_mcmc, char *fit_BAO,char *fit_RSD,double *k_Plin,double *Plin,int N_Plin, double *k_Olin, double *Olin, int N_Olin, double *pos, double *W0, double *W2, double *W4,double *W6, double *W8,int Nmask, char *path_to_mask1, char *spacing_maskNGC, double *posSGC, double *W0SGC, double *W2SGC, double *W4SGC, double *W6SGC, double *W8SGC, int NmaskSGC, char *path_to_mask2, char *spacing_maskSGC,  double *k0bao, double *k0rsd, double *P0bao, double *P0rsd, double *errP0bao, double *errP0rsd, int NeffP0bao, int NeffP0rsd, double *k2bao, double *k2rsd, double *P2bao, double *P2rsd, double *errP2bao, double *errP2rsd, int NeffP2bao, int NeffP2rsd, double *k4bao, double *k4rsd, double *P4bao, double *P4rsd, double *errP4bao, double *errP4rsd, int NeffP4bao, int NeffP4rsd, double *k11bao, double *k11rsd, double *k22bao, double *k22rsd, double *k33bao, double *k33rsd, double *B0bao, double *B0rsd, double *errB0bao, double *errB0rsd, double *Bnoise_bao, double *Bnoise_rsd, int NeffB0bao, int NeffB0rsd, double *k0baoSGC, double *k0rsdSGC, double *P0baoSGC, double *P0rsdSGC, double *errP0baoSGC, double *errP0rsdSGC,int NeffP0baoSGC,int NeffP0rsdSGC, double *k2baoSGC,double *k2rsdSGC, double *P2baoSGC,double *P2rsdSGC, double *errP2baoSGC,double *errP2rsdSGC,int NeffP2baoSGC,int NeffP2rsdSGC, double *k4baoSGC, double *k4rsdSGC, double *P4baoSGC,double *P4rsdSGC, double *errP4baoSGC,double *errP4rsdSGC,int NeffP4baoSGC,int NeffP4rsdSGC, double *k11baoSGC,double *k11rsdSGC, double *k22baoSGC,double *k22rsdSGC, double *k33baoSGC,double *k33rsdSGC,double *B0baoSGC,double *B0rsdSGC,double *errB0baoSGC, double *errB0rsdSGC, double *Bnoise_baoSGC, double *Bnoise_rsdSGC,int NeffB0baoSGC,int NeffB0rsdSGC, double *cov, double *covSGC, double alpha_min, double alpha_max, char *Sigma_def_type, char *Sigma_independent, double ffactor, double Sigma_type[], double Sigma_nl_mean[], double Sigma_nl_stddev[], int Npolynomial, int Nchunks, char *path_output, char *identifier, char *do_plot, long int Nsteps, char *do_power_spectrum, char *do_bispectrum,int Nalphas,int Nsigmas_tot, int Nsigmas_free, double **Theory, int Ntheory, double Pnoise, double PnoiseSGC, char *ptmodel_ps,  char *rsdmodel_ps,  char *fogmodel_ps,  char *ptmodel_bs,   char *local_b2s2,   char *local_b3nl,  char *RSD_fit,  char *sigma8_free,  char *fog_free,  char *fog_bs, double Sigma_smooth,int factor_sampling_mask,char *spacing_dataNGC_bao,char *spacing_dataNGC_rsd,char *spacing_dataSGC_bao,char *spacing_dataSGC_rsd,char *spacing_theory_bao,char *spacing_theory_rsd,char *type_of_analysis_BAO,char *type_of_analysis_FS,double knl, double sigma8, double *n_func_final,double *sigma8_x,double *knl_y,int Nknl, char *bispectrum_BQ, char *mask_matrix, double **MatrixBAO_mask_NGC, double **MatrixBAO_mask_SGC, double **MatrixFS_mask_NGC, double **MatrixFS_mask_SGC, double *FSprior_type, double *FSprior_mean, double *FSprior_stddev,int noise_option, double step_size, char *covariance_correction, int NrealNGC, int NrealSGC )
 {
-int i_thread;
+int prior_anoiseN,prior_anoiseS,prior_b2N,prior_b2S,prior_bs2N,prior_bs2S,prior_b3nlN,prior_b3nlS;
+int i_thread,iprior;
 double time_run;
 long int time_ini,time_final;
 FILE *f;
@@ -1724,6 +1854,7 @@ long int *params_mcmc;
 double *mean_vector, *min_vector;
 double prior;
 int dimension,dimensionbao,dimensionrsd;
+int dimensionP;
 int Ndof,Npoints,NpointsSGC;
 int Npointsbao,Npointsrsd,NpointsbaoSGC,NpointsrsdSGC;
 //double *parameters_plot;
@@ -1731,6 +1862,7 @@ double *parameters2;
 double *parameters2_bao,*parameters2_rsd;
 int modeP0bao,modeP2bao,modeP4bao;
 int modeP0rsd,modeP2rsd,modeP4rsd;
+int modeB0rsd,modeB0bao;
 char name_wo_extension[2000];
 char name_file_thread[2000];
 FILE *urandom;
@@ -1740,15 +1872,19 @@ int baoiso_shift;
 //fftw_complex *a_pointer;
 //fftw_complex *b_pointer;
 
-fftw_complex *a_pointerbao;
-fftw_complex *b_pointerbao;
+fftw_complex *a_pointerbao;a_pointerbao=NULL;
+fftw_complex *b_pointerbao;b_pointerbao=NULL;
 
-fftw_complex *a_pointerrsd;
-fftw_complex *b_pointerrsd;
+fftw_complex *a_pointerrsd;a_pointerrsd=NULL;
+fftw_complex *b_pointerrsd;b_pointerrsd=NULL;
 
 fftw_plan plan1bao,plan1rsd,plan2bao,plan2rsd;
 
-modeP0bao=0;modeP2bao=0;modeP4bao=0;Npointsbao=0;
+
+modeP0bao=0;modeP2bao=0;modeP4bao=0;modeB0bao=0;Npointsbao=0;
+modeP0rsd=0;modeP2rsd=0;modeP4rsd=0;modeB0rsd=0;Npointsrsd=0;
+if( strcmp(do_power_spectrum,"yes") == 0 ){
+
 if(strcmp(type_of_analysis_BAO,"yes")==0){
 if(strcmp(fit_BAO, "P0") == 0){Npointsbao=NeffP0bao;modeP0bao=1;}
 if(strcmp(fit_BAO, "P2") == 0){Npointsbao=NeffP2bao;modeP2bao=1;}
@@ -1758,7 +1894,6 @@ if(strcmp(fit_BAO, "P04") == 0){Npointsbao=NeffP0bao+NeffP4bao;modeP0bao=1;modeP
 if(strcmp(fit_BAO, "P24") == 0){Npointsbao=NeffP2bao+NeffP4bao;modeP2bao=1;modeP4bao=1;}
 if(strcmp(fit_BAO, "P024") == 0){Npointsbao=NeffP0bao+NeffP2bao+NeffP4bao;modeP0bao=1;modeP2bao=1;modeP4bao=1;}}
 
-modeP0rsd=0;modeP2rsd=0;modeP4rsd=0;Npointsrsd=0;
 if(strcmp(type_of_analysis_FS,"yes")==0){
 if(strcmp(fit_RSD, "P0") == 0){Npointsrsd=NeffP0rsd;modeP0rsd=1;}
 if(strcmp(fit_RSD, "P2") == 0){Npointsrsd=NeffP2rsd;modeP2rsd=1;}
@@ -1767,12 +1902,28 @@ if(strcmp(fit_RSD, "P02") == 0){Npointsrsd=NeffP0rsd+NeffP2rsd;modeP0rsd=1;modeP
 if(strcmp(fit_RSD, "P04") == 0){Npointsrsd=NeffP0rsd+NeffP4rsd;modeP0rsd=1;modeP4rsd=1;}
 if(strcmp(fit_RSD, "P24") == 0){Npointsrsd=NeffP2rsd+NeffP4rsd;modeP2rsd=1;modeP4rsd=1;}
 if(strcmp(fit_RSD, "P024") == 0){Npointsrsd=NeffP0rsd+NeffP2rsd+NeffP4rsd;modeP0rsd=1;modeP2rsd=1;modeP4rsd=1;}}
+
+}
+if( strcmp(do_bispectrum,"yes") == 0 ){
+
+    if(strcmp(type_of_analysis_BAO,"yes")==0){
+    Npointsbao=Npointsbao+NeffB0bao;modeB0bao=1;//printf("Warning!! %s %s\n",do_bispectrum,type_of_analysis_BAO);
+    }
+    if(strcmp(type_of_analysis_FS,"yes")==0){
+    Npointsrsd=Npointsrsd+NeffB0rsd;modeB0rsd=1;
+    }
+
+}
+
 Npoints=Npointsrsd+Npointsbao;
 
 NpointsSGC=0;
 if(Nchunks==2)
 {
 NpointsbaoSGC=0;
+
+if( strcmp(do_power_spectrum,"yes") == 0 ){
+
 if(strcmp(type_of_analysis_BAO,"yes")==0){
 if(strcmp(fit_BAO, "P0") == 0){NpointsbaoSGC=NeffP0baoSGC;}
 if(strcmp(fit_BAO, "P2") == 0){NpointsbaoSGC=NeffP2baoSGC;}
@@ -1791,52 +1942,92 @@ if(strcmp(fit_RSD, "P02") == 0){NpointsrsdSGC=NeffP0rsdSGC+NeffP2rsdSGC;}
 if(strcmp(fit_RSD, "P04") == 0){NpointsrsdSGC=NeffP0rsdSGC+NeffP4rsdSGC;}
 if(strcmp(fit_RSD, "P24") == 0){NpointsrsdSGC=NeffP2rsdSGC+NeffP4rsdSGC;}
 if(strcmp(fit_RSD, "P024") == 0){NpointsrsdSGC=NeffP0rsdSGC+NeffP2rsdSGC+NeffP4rsdSGC;}}
+}
+if( strcmp(do_bispectrum,"yes") == 0 ){
+
+   if(strcmp(type_of_analysis_BAO,"yes")==0){
+  NpointsbaoSGC=NpointsbaoSGC+NeffB0baoSGC;
+   }
+   if(strcmp(type_of_analysis_FS,"yes")==0){
+  NpointsrsdSGC=NpointsrsdSGC+NeffB0rsdSGC;
+   }
+
+}
 
 NpointsSGC=NpointsbaoSGC+NpointsrsdSGC;
-
 
 }
 
 //For BAO-only
 if(strcmp(type_of_analysis, "BAOISO") == 0 || strcmp(type_of_analysis, "FSBAOISO") == 0){
+dimension=0;
+dimensionbao=0;
+dimensionP=0;
+if( strcmp(do_power_spectrum,"yes") == 0){
 dimension=Nchunks*(Npolynomial+1)*(modeP0bao+modeP2bao+modeP4bao)+Nalphas+Nsigmas_tot;//for parameters plot
 dimensionbao=Nchunks*(Npolynomial+1)*(modeP0bao+modeP2bao+modeP4bao)+Nalphas+Nsigmas_tot;//for parameters plot
+dimensionP=dimension;
+}
+if( strcmp(do_bispectrum,"yes") == 0){
+dimension=dimension+( Nchunks*(Npolynomial+1)+6.*Nchunks+1.0);//+1 is for sigma_B
+dimensionbao=dimensionbao+( Nchunks*(Npolynomial+1)+6.*Nchunks+1.0);//+1 is for sigmaB
+
+if( strcmp(do_power_spectrum,"no") == 0){
+dimension++;//add one more for alpha0
+dimensionbao++;//add one more for alpha0
+}
+
+}
 //parameters2 =  (double*) calloc( dimension, sizeof(double));
 
 if( strcmp(type_of_analysis, "FSBAOISO") == 0 && Nalphas==1){dimension=dimension+1;}//we add space for an extra alpha when FS-BAO and P0,P2,P4
 
-//For Bispectrum to be included here
+//TBD for Bispectrum, not available so far
 
-}
+}//BAOISO o FSBAOISO
 
 if(strcmp(type_of_analysis, "BAOANISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0){
-dimension=Nchunks*(1+Npolynomial*(modeP0bao+modeP2bao+modeP4bao))+Nalphas+Nsigmas_tot+1;//for parameters plot
-dimensionbao=Nchunks*(1+Npolynomial*(modeP0bao+modeP2bao+modeP4bao))+Nalphas+Nsigmas_tot+1;//for parameters plot
-//parameters2 =  (double*) calloc( dimension, sizeof(double));
+
+dimension=0;
+dimensionbao=0;
+dimensionP=0;
+if( strcmp(do_power_spectrum,"yes") == 0){
+dimension=Nchunks*(1+Npolynomial*(modeP0bao+modeP2bao+modeP4bao))+Nalphas+Nsigmas_tot+1;//for parameters plot (+1 is for beta)
+dimensionbao=Nchunks*(1+Npolynomial*(modeP0bao+modeP2bao+modeP4bao))+Nalphas+Nsigmas_tot+1;//for parameters plot (+1 is for beta)
+dimensionP=dimension;
 }
 
-if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0){
+if( strcmp(do_bispectrum,"yes") == 0){
+dimension=dimension+( Nchunks*(Npolynomial+1)+6.*Nchunks+1.0);//+1 is for sigma_B
+dimensionbao=dimensionbao+( Nchunks*(Npolynomial+1)+6.*Nchunks+1.0);//+1 is for sigma_B
+if( strcmp(do_power_spectrum,"no") == 0){
+dimension++;//add one more for alpha0
+dimensionbao++;//add one more for alpha0
+}
+
+}
+
+//parameters2 =  (double*) calloc( dimension, sizeof(double));
+}//BAOANISO o FSBAOANISO
+
+if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
 //For RSD-only
 dimension=3;//b1,b2,A
 if(strcmp(local_b2s2, "no") == 0){dimension++;}//b2s2
 if(strcmp(local_b3nl, "no") == 0){dimension++;}//b3nl
-if(strcmp(fog_free, "yes") == 0  && strcmp(do_power_spectrum, "yes") == 0){dimension++;}//fog_ps
-if(strcmp(fog_bs, "no") == 0 && strcmp(do_bispectrum, "yes") == 0 ){dimension++;}//fog_bs
+if(strcmp(fog_free, "yes") == 0){dimension++;}//fog_ps
+if(strcmp(fog_free, "yes") == 0 && strcmp(fogmodel_ps, "Exponential_avir") == 0){dimension++;}//avir
+if(strcmp(fog_free, "yes") == 0 && strcmp(fog_bs, "no") == 0 && strcmp(do_bispectrum, "yes") == 0 && strcmp(do_power_spectrum, "yes") == 0){dimension++;}//fog_bs
 dimension=dimension*Nchunks;//x2
 if(strcmp(sigma8_free, "yes") == 0){dimension++;}//s8 as free parameter
 if(strcmp(RSD_fit, "yes") == 0){dimension=dimension+3;}//f,apara,aperp as free parameter
+if(strcmp(RSD_fit, "shape") == 0){dimension=dimension+4;}//f,apara,aperp,m_BGV as free parameter
+if(strcmp(RSD_fit, "shape2") == 0){dimension=dimension+5;}//f,apara,aperp,m1_BGV, m2_BGV as free parameter
 dimensionrsd=dimension;
-}
+}//FS o FSBAOISO o FSBAOANISO
 
 if(strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0){dimension=dimensionrsd+dimensionbao-2;}
 
-//printf("dimension %d\n",dimension);
-//exit(0);
-/*
- *  FFTW plans ARE NOT thread-safe and MUST BE created BEFORE the multi-thread starts
- */
-//BAO
-//
 kmax_databao=-1;
 kmin_databao=999999;
 if(strcmp(type_of_analysis_BAO,"yes")==0){
@@ -1864,14 +2055,38 @@ if(Nchunks==2){
 if(kmin_databao>k0baoSGC[0]){kmin_databao=k0baoSGC[0];}
 if(kmax_databao<k0baoSGC[NeffP0baoSGC-1]){kmax_databao=k0baoSGC[NeffP0baoSGC-1];}}
 }
-if(kmin_databao==999999 || kmax_databao==-1){printf("Error with values of kmin,kmax for data-BAO. Exiting now...\n");exit(0);}
+if(modeB0bao==1)
+{
+if(kmin_databao>k11bao[0]){kmin_databao=k11bao[0];}
+if(kmax_databao<k11bao[NeffB0bao-1]){kmax_databao=k11bao[NeffB0bao-1];}
+if(Nchunks==2){
+if(kmin_databao>k11baoSGC[0]){kmin_databao=k11baoSGC[0];}
+if(kmax_databao<k11baoSGC[NeffB0baoSGC-1]){kmax_databao=k11baoSGC[NeffB0baoSGC-1];}}
+
+if(kmin_databao>k22bao[0]){kmin_databao=k22bao[0];}
+if(kmax_databao<k22bao[NeffB0bao-1]){kmax_databao=k22bao[NeffB0bao-1];}
+if(Nchunks==2){
+if(kmin_databao>k22baoSGC[0]){kmin_databao=k22baoSGC[0];}
+if(kmax_databao<k22baoSGC[NeffB0baoSGC-1]){kmax_databao=k22baoSGC[NeffB0baoSGC-1];}}
+
+if(kmin_databao>k33bao[0]){kmin_databao=k33bao[0];}
+if(kmax_databao<k33bao[NeffB0bao-1]){kmax_databao=k33bao[NeffB0bao-1];}
+if(Nchunks==2){
+if(kmin_databao>k33baoSGC[0]){kmin_databao=k33baoSGC[0];}
+if(kmax_databao<k33baoSGC[NeffB0baoSGC-1]){kmax_databao=k33baoSGC[NeffB0baoSGC-1];}}
+
 }
 
+if(kmin_databao==999999 || kmax_databao==-1){printf("Error with values of kmin,kmax for data-BAO. Exiting now...\n");exit(0);}
+}//strcmp(type_of_analysis_BAO,"yes")==0
+
+//exit(0);
 
 //RSD
 kmax_datarsd=-1;
 kmin_datarsd=999999;
 if(strcmp(type_of_analysis_FS,"yes")==0){
+
 if(modeP4rsd==1)
 {
 if(kmin_datarsd>k4rsd[0]){kmin_datarsd=k4rsd[0];}
@@ -1896,6 +2111,30 @@ if(Nchunks==2){
 if(kmin_datarsd>k0rsdSGC[0]){kmin_datarsd=k0rsdSGC[0];}
 if(kmax_datarsd<k0rsdSGC[NeffP0rsdSGC-1]){kmax_datarsd=k0rsdSGC[NeffP0rsdSGC-1];}}
 }
+
+if(modeB0rsd==1)
+{
+if(kmin_datarsd>k11rsd[0]){kmin_datarsd=k11rsd[0];}
+if(kmax_datarsd<k11rsd[NeffB0rsd-1]){kmax_datarsd=k11rsd[NeffB0rsd-1];}
+if(Nchunks==2){
+if(kmin_datarsd>k11rsdSGC[0]){kmin_datarsd=k11rsdSGC[0];}
+if(kmax_datarsd<k11rsdSGC[NeffB0rsdSGC-1]){kmax_datarsd=k11rsdSGC[NeffB0rsdSGC-1];}}
+
+if(kmin_datarsd>k22rsd[0]){kmin_datarsd=k22rsd[0];}
+if(kmax_datarsd<k22rsd[NeffB0rsd-1]){kmax_datarsd=k22rsd[NeffB0rsd-1];}
+if(Nchunks==2){
+if(kmin_datarsd>k22rsdSGC[0]){kmin_datarsd=k22rsdSGC[0];}
+if(kmax_datarsd<k22rsdSGC[NeffB0rsdSGC-1]){kmax_datarsd=k22rsdSGC[NeffB0rsdSGC-1];}}
+
+if(kmin_datarsd>k33rsd[0]){kmin_datarsd=k33rsd[0];}
+if(kmax_datarsd<k33rsd[NeffB0rsd-1]){kmax_datarsd=k33rsd[NeffB0rsd-1];}
+if(Nchunks==2){
+if(kmin_datarsd>k33rsdSGC[0]){kmin_datarsd=k33rsdSGC[0];}
+if(kmax_datarsd<k33rsdSGC[NeffB0rsdSGC-1]){kmax_datarsd=k33rsdSGC[NeffB0rsdSGC-1];}}
+
+}
+
+
 if(kmin_datarsd==999999 || kmax_datarsd==-1){printf("Error with values of kmin,kmax for data-RSD. Exiting now...\n");exit(0);}
 }
 
@@ -1911,9 +2150,11 @@ Nplanbao=(int)(paramsbao[2]);
 
 }
 
-if(  strcmp(type_of_analysis, "FS") == 0 ){
+if(  strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
 kmin_Ntheory=Theory[0][0];
 kmax_Ntheory=Theory[Ntheory-1][0];
+//printf("%lf,%lf\n",kmin_Ntheory,kmax_Ntheory);
+//exit(0);
 set_mask_params(paramsrsd,kmin_Ntheory,kmax_Ntheory,Ntheory,kmin_datarsd,kmax_datarsd);
 
 Nplanrsd=(int)(paramsrsd[2]);
@@ -1952,12 +2193,101 @@ Nplanrsd=(int)(paramsrsd[2]);
 priors_low=(double*) calloc(N_Cov_prop, sizeof(double));
 priors_high=(double*) calloc(N_Cov_prop, sizeof(double));
 
-set_mcmc_priors(alpha_min,alpha_max,priors_low,priors_high,N_Cov_prop);
+//set_mcmc_priors(alpha_min,alpha_max,priors_low,priors_high,N_Cov_prop);
+ set_mcmc_priors(alpha_min, alpha_max, priors_low, priors_high,N_Cov_prop, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, local_b2s2, local_b3nl, fog_free, fogmodel_ps, fog_bs, sigma8_free, RSD_fit, Nchunks, Npolynomial, path_output, identifier);
+
 
 for(i=0;i<N_Cov_prop;i++)
 {
 if(priors_low[i]>=priors_high[i]){printf("Error. Non-phyiscal prior range: prior_low[%ld] (%lf) >=prior_high[%ld] (%lf). Exiting now...\n",i,priors_low[i],i,priors_high[i]);printf("Ncov=%d\n",N_Cov_prop);exit(0);}
 }
+
+
+//int prior_anoiseN,prior_anoiseS,prior_b2N,prior_b2S,prior_bs2N,prior_bs2S,prior_b3nlN,prior_b3nlS;
+if(strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0 || strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
+
+iprior=0;prior_anoiseN=-1;prior_anoiseS=-1;prior_b2N=-1;prior_b2S=-1;prior_b3nlN=-1;prior_b3nlS=-1;prior_bs2N=-1;prior_bs2N=-1;
+for(i=0;i<22;i++){
+
+if(strcmp(RSD_fit, "yes") == 0 && i<5){//alpha_para, alpha_perp, m, m2, f
+if(i!=2 && i!=3){
+iprior++;}
+}
+
+if(strcmp(RSD_fit, "shape") == 0 && i<5){
+if(i==3){}
+else{iprior++;}
+}
+
+if(strcmp(RSD_fit, "shape2") == 0 && i<5){
+iprior++;}
+
+if(i==5 && strcmp(sigma8_free, "yes") == 0 ){iprior++;}
+
+if(i>=6 && i<=8){
+if(i==8){prior_anoiseN=iprior;}//Anoise
+if(i==7){prior_b2N=iprior;}//b2
+iprior++;
+}
+
+if(i==9 && strcmp(local_b2s2, "no") == 0){
+prior_bs2N=iprior;
+iprior++;
+}
+
+if(i==10 && strcmp(local_b3nl, "no") == 0){
+prior_b3nlN=iprior;
+iprior++;
+}
+
+if(i==11 && strcmp(fog_free, "yes") == 0 && strcmp(do_power_spectrum, "yes") == 0){
+iprior++;
+}
+
+if(i==12 && strcmp(fog_bs, "no") == 0 && strcmp(do_bispectrum, "yes") == 0  ){
+iprior++;
+}
+
+if(i==13 && strcmp(fog_free, "yes") == 0 && strcmp(fogmodel_ps,"Exponential_avir") == 0)
+{
+iprior++;
+}
+
+//N=2
+
+if(i>=14 && i<=16){
+if(i==16){prior_anoiseS=iprior;}//Anoise
+if(i==15){prior_b2S=iprior;}//b2
+iprior++;
+}
+
+if(i==17 && strcmp(local_b2s2, "no") == 0){
+prior_bs2S=iprior;
+iprior++;
+}
+
+if(i==18 && strcmp(local_b3nl, "no") == 0){
+prior_b3nlS=iprior;
+iprior++;
+}
+
+if(i==19 && strcmp(fog_free, "yes") == 0 && strcmp(do_power_spectrum, "yes") == 0){
+iprior++;
+}
+
+if(i==20 && strcmp(fog_bs, "no") == 0 && strcmp(do_bispectrum, "yes") == 0  ){
+iprior++;
+}
+
+if(i==21 && strcmp(fog_free, "yes") == 0 && strcmp(fogmodel_ps,"Exponential_avir") == 0)
+{
+iprior++;
+}
+
+}//i
+
+}//if FS
+//printf("prior_anoiseN=%d prior_anoiseS=%d\n",prior_anoiseN,prior_anoiseS);
 
 
 params_mcmc=(long int*) calloc( 2, sizeof(long int ));
@@ -1973,8 +2303,10 @@ Nburnout=(long int)(Nburnout*fraction);
 abs_counter_shared = 0;
 j_run_shared = 0;
 convergence_shared = 0;
-if(trial_mcmc==1){normalize_step=1.9/sqrt(N_Cov_prop*1.);}//fraction of the step wrt the typical rms
-else{normalize_step=1.9/sqrt(1.*N_Cov_prop);}
+
+
+if(trial_mcmc==1){normalize_step=step_size/sqrt(N_Cov_prop*1.);}//fraction of the step wrt the typical rms
+else{normalize_step=step_size/sqrt(1.*N_Cov_prop);}
 
 time_ini=time(NULL);
 
@@ -1983,6 +2315,7 @@ srand48(time(NULL)*123456789);
 seed = (double *) calloc(nthreads*3,sizeof(double));
 
 for(i=0;i<nthreads*3;i++)seed[i]=drand48();
+
 
 #pragma omp parallel for \
   private (urandom,randstate,i_thread,  f, Dwhite, Doriginal, step, parameters2,parameters2_bao,parameters2_rsd, input_vector_trial, \
@@ -1994,15 +2327,15 @@ for(i=0;i<nthreads*3;i++)seed[i]=drand48();
           W8, Nmask, path_to_mask1, spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC, W6SGC, W8SGC, NmaskSGC, \
           path_to_mask2, spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd, NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd, NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd, NeffP4bao,NeffP4rsd, \
           k11bao,k11rsd, k22bao,k22rsd, k33bao,k33rsd, B0bao,B0rsd, errB0bao,errB0rsd, Bnoise_bao,Bnoise_rsd, NeffB0bao,NeffB0rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC, NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC, \
-          NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, k11baoSGC,k11rsdSGC, k22baoSGC,k22rsdSGC, k33baoSGC,k33rsdSGC, B0baoSGC,B0rsdSGC, Bnoise_baoSGC,Bnoise_rsdSGC, NeffB0baoSGC,NeffB0rsdSGC, \
+          NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, k11baoSGC,k11rsdSGC, k22baoSGC,k22rsdSGC, k33baoSGC,k33rsdSGC, B0baoSGC,B0rsdSGC,errB0baoSGC,errB0rsdSGC, Bnoise_baoSGC,Bnoise_rsdSGC, NeffB0baoSGC,NeffB0rsdSGC, \
           cov, covSGC, Sigma_def_type, Sigma_independent, ffactor, Sigma_type, \
           Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks, Nsteps, \
           do_power_spectrum, do_bispectrum, Nalphas, Nsigmas_tot, Nsigmas_free, Theory, Pnoise, PnoiseSGC, \
           ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl, RSD_fit, sigma8_free, fog_free, \
           fog_bs, Sigma_smooth, factor_sampling_mask, spacing_dataNGC_rsd,spacing_dataNGC_bao, spacing_dataSGC_bao,spacing_dataSGC_rsd, spacing_theory_bao,spacing_theory_rsd, \
           vector_buffer, vector_mean, abs_counter_shared, convergence_shared, j_run_shared, \
-          Nburnout, N_print, N_max, priors_low, priors_high, dimension,dimensionbao,dimensionrsd, \
-          modeP0bao,modeP0rsd, modeP2bao,modeP2rsd, modeP4bao,modeP4rsd, name_wo_extension, normalize_step, lines,type_of_analysis_BAO,type_of_analysis_FS) \
+          Nburnout, N_print, N_max, priors_low, priors_high, dimension,dimensionbao,dimensionrsd,dimensionP, \
+          modeP0bao,modeP0rsd, modeP2bao,modeP2rsd, modeP4bao,modeP4rsd,modeB0bao,modeB0rsd, name_wo_extension, normalize_step, lines,type_of_analysis_BAO,type_of_analysis_FS,knl, sigma8, n_func_final,sigma8_x,knl_y,Nknl,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type, FSprior_mean, FSprior_stddev, noise_option) \
   schedule (static,1) \
   num_threads (nthreads)
 
@@ -2017,7 +2350,7 @@ Doriginal = (double*) calloc( N_Cov_prop, sizeof(double));
 step = (double*) calloc( N_Cov_prop, sizeof(double));
 input_vector_trial = (double*) calloc( N_Cov_prop, sizeof(double));
 input_vector_accepted = (double*) calloc( N_Cov_prop, sizeof(double));
-parameters2 =  (double*) calloc( dimension, sizeof(double));
+parameters2 =  (double*) calloc( dimension, sizeof(double));//printf("dim=%d\n", dimension);
 
 if(strcmp(type_of_analysis_BAO,"yes")==0 && strcmp(type_of_analysis_FS,"yes")==0)
 {
@@ -2061,16 +2394,23 @@ printf("%d, B %lf\n",i_thread,random_acceptance);
 for(i=0;i<N_Cov_prop;i++)
 {
 input_vector_accepted[i]=vector_mean[i];
+//printf("inv[%d]=%lf\n",i,input_vector_accepted[i]);
 }
 
 //for BAO
 if(strcmp(type_of_analysis, "BAOISO") == 0){
 
 parameters2[0]=input_vector_accepted[0];i1=1;i2=1;
-if(modeP0bao+modeP2bao+modeP4bao>1){parameters2[1]=input_vector_accepted[1];i1=2;i2=2;}
+
+if(strcmp(do_power_spectrum,"yes") == 0 ){
+
+//if(modeP0bao+modeP2bao+modeP4bao>1){parameters2[1]=input_vector_accepted[1];i1=2;i2=2;}
+if(Nalphas>1){parameters2[1]=input_vector_accepted[1];i1=2;i2=2;}//this also includes the sum modeP=1 && modeP0=0 && bispectrum=yes
+
 if(Nsigmas_free==0)
 {
-if(modeP0bao+modeP2bao+modeP4bao==1)
+//if(modeP0bao+modeP2bao+modeP4bao==1)
+if(Nalphas==1)
 {
   if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0 )
   {
@@ -2092,7 +2432,8 @@ if(modeP0bao+modeP2bao+modeP4bao==1)
    i1=2;
   }
 }
-if(modeP0bao+modeP2bao+modeP4bao>1){
+//if(modeP0bao+modeP2bao+modeP4bao>1){
+if(Nalphas>1){
   if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0)
   {
   parameters2[2]=Sigma_nl_mean[0];
@@ -2110,25 +2451,59 @@ if(modeP0bao+modeP2bao+modeP4bao>1){
     if(modeP0bao==1 && modeP2bao==1 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[1];i1=4;}
     if(modeP0bao==1 && modeP2bao==0 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[2];i1=4;}
     if(modeP0bao==0 && modeP2bao==1 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[1];parameters2[3]=Sigma_nl_mean[2];i1=4;}
+
+    if(modeP0bao==1 && modeP2bao==0 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[0];i1=3;}//this never will happen anyway I leave it for completeness
+    if(modeP0bao==0 && modeP2bao==1 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[1];i1=3;}//this can happen only if bispect=yes
+    if(modeP0bao==0 && modeP2bao==0 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[2];i1=3;}//this can happen only if bispec=yes
+
   }
   if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "no") == 0){parameters2[2]=Sigma_nl_mean[0];i1=3;}
 }
-}
-//for(i=Nalphas+Nsigmas_tot-Nsigmas_free;i<N_Cov_prop;i++){parameters2[i+Nsigmas_tot-Nsigmas_free]=input_vector_accepted[i];}//set the rest of parameters
+}//Nsigmas_free==0
+
+///////for(i=Nalphas+Nsigmas_tot-Nsigmas_free;i<N_Cov_prop;i++){parameters2[i+Nsigmas_tot-Nsigmas_free]=input_vector_accepted[i];}//set the rest of parameters
+for(i=i1;i<dimensionP;i++){parameters2[i]=input_vector_accepted[i2];i2++;}//set the rest of parameters of P-NGC
+i1=i;
+
+//printf("i1=%d\n",i);
+//for(i=0;i<i1;i++){printf("a[%d]=%lf\n",i,parameters2[i]);}
+
+}//do power
+
+
+if(strcmp(do_bispectrum,"yes") == 0 ){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=input_vector_accepted[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
 for(i=i1;i<dimension;i++){parameters2[i]=input_vector_accepted[i2];i2++;}//set the rest of parameters
-
-
-L_current=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
-//printf("chi2-baoiso kernel=%lf\n",L_current);
+//for(i=i1-1;i<dimension;i++){printf("a[%d]=%lf\n",i,parameters2[i]);}
+}//do bispec
+//printf("i1=%d\n",i);
 
 //exit(0);
-}
+L_current=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC, Bnoise_baoSGC,NeffB0baoSGC,bispectrum_BQ,mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC,covariance_correction, NrealNGC, NrealSGC);
+//printf("chi2-baoiso kernel=%lf\n",L_current);
+
+
+//exit(0);
+}//BAOISO
 
 if(strcmp(type_of_analysis, "BAOANISO") == 0){
 
+if(strcmp(do_power_spectrum,"yes") == 0 ){
 parameters2[0]=input_vector_accepted[0];
 parameters2[1]=input_vector_accepted[1];
 i1=2;i2=2;
+}
+
+if(strcmp(do_power_spectrum,"no") == 0 ){//in this special case, only one alpha for B0
+parameters2[0]=input_vector_accepted[0];
+i1=1;i2=1;
+}
+
+if(strcmp(do_power_spectrum,"yes") == 0 ){
+
 if(Nsigmas_free==0)
 {
 
@@ -2149,36 +2524,68 @@ if(Nsigmas_free==0)
  
 }
 
-for(i=i1;i<dimension;i++){parameters2[i]=input_vector_accepted[i2];i2++;}//set the rest of parameters
+for(i=i1;i<dimensionP;i++){parameters2[i]=input_vector_accepted[i2];i2++;}//set the rest of parameters
 //for(i=0;i<dimension;i++){printf("%ld, %lf\n",i,parameters2[i]);}
+i1=i;
+
+}//do power
+
+if(strcmp(do_bispectrum,"yes") == 0 ){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=input_vector_accepted[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
+for(i=i1;i<dimension;i++){parameters2[i]=input_vector_accepted[i2];i2++;}//set the rest of parameters
+}//do bispec
 
 //exit(0);
-L_current=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+L_current=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC, Bnoise_baoSGC,NeffB0baoSGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC,covariance_correction, NrealNGC, NrealSGC);
 //printf("chi2-bao aniso kernel=%lf\n",L_current);
 //exit(0);
 }
 //exit(0);
 
-if(strcmp(type_of_analysis, "FS") == 0){
+if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
 
-//printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",input_vector_accepted[0],input_vector_accepted[1],input_vector_accepted[2],input_vector_accepted[3],input_vector_accepted[4],input_vector_accepted[5],input_vector_accepted[6],input_vector_accepted[7],input_vector_accepted[8],input_vector_accepted[9],input_vector_accepted[10]);
+//printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",input_vector_accepted[0],input_vector_accepted[1],input_vector_accepted[2],input_vector_accepted[3],input_vector_accepted[4],input_vector_accepted[5],input_vector_accepted[6],input_vector_accepted[7],input_vector_accepted[8],input_vector_accepted[9],input_vector_accepted[10],input_vector_accepted[11],input_vector_accepted[12],input_vector_accepted[13]);
 
 //exit(0);
 //L_current=chi2_rsd();
 
-L_current=chi2_rsd_mcmc(type_of_analysis,input_vector_accepted, Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, Pnoise, k2rsd, P2rsd, k4rsd, P4rsd, k0rsdSGC, P0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC, k4rsdSGC, P4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC,NeffP2rsdSGC,NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd);
+L_current=chi2_rsd_mcmc(type_of_analysis,input_vector_accepted, Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, Pnoise, k2rsd, P2rsd, k4rsd, P4rsd, k0rsdSGC, P0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC, k4rsdSGC, P4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC,NeffP2rsdSGC,NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,knl, n_func_final, sigma8_x, knl_y,Nknl, k11rsd,k22rsd,k33rsd,B0rsd,Bnoise_rsd,NeffB0rsd,k11rsdSGC,k22rsdSGC,k33rsdSGC,B0rsdSGC,Bnoise_rsdSGC,NeffB0rsdSGC,bispectrum_BQ,mask_matrix, MatrixFS_mask_NGC, MatrixFS_mask_SGC, FSprior_type, FSprior_mean, FSprior_stddev, noise_option, covariance_correction, NrealNGC, NrealSGC,P0bao,P0baoSGC);
 
 //if(i_thread==0){printf("chi2 FS kernel=%lf (%d)\n",L_current,i_thread);}
+//if(L_current<0){
+//printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",input_vector_accepted[0],input_vector_accepted[1],input_vector_accepted[2],input_vector_accepted[3],input_vector_accepted[4],input_vector_accepted[5],input_vector_accepted[6],input_vector_accepted[7],input_vector_accepted[8],input_vector_accepted[9],input_vector_accepted[10],input_vector_accepted[11],input_vector_accepted[12],input_vector_accepted[13]);
 //printf("chi2 FS kernel=%lf\n",L_current);
+//}
 //exit(0);
 
 }
 
 if(strcmp(type_of_analysis, "FSBAOISO") == 0){
+//no bispectrum allowed here so far
 
 parameters2[0]=input_vector_accepted[0];//apara
 parameters2[1]=input_vector_accepted[1];//aperp
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2[2]=input_vector_accepted[2];//f
+i2=3;
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2[2]=input_vector_accepted[2];//m_BGV
+parameters2[3]=input_vector_accepted[3];//f
+i2=4;
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2[2]=input_vector_accepted[2];//m1_BGV
+parameters2[3]=input_vector_accepted[3];//m2_BGV
+parameters2[4]=input_vector_accepted[4];//f
+i2=5;
+}
 
 //parameters2_bao[0]=input_vector_accepted[0];//apara
 //parameters2_bao[1]=input_vector_accepted[1];//aperp
@@ -2196,7 +2603,7 @@ if(modeP2bao==1){parameters2_bao[0]=pow(input_vector_accepted[0],3./5.)*pow(inpu
 if(modeP4bao==1){parameters2_bao[0]=pow(input_vector_accepted[0],5./7.)*pow(input_vector_accepted[1],2./7.);  }
 }
 
-i1=2;i2=3;
+i1=2;//i2=3;
 if(Nsigmas_free==0)
 {
 
@@ -2308,10 +2715,24 @@ for(i=i1+1;i<dimensionbao+baoiso_shift;i++){parameters2[i]=input_vector_accepted
 
 parameters2_rsd[0]=input_vector_accepted[0];
 parameters2_rsd[1]=input_vector_accepted[1];
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2_rsd[2]=input_vector_accepted[2];
 for(i=3;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_accepted[i2];parameters2[i-3+dimensionbao+1]=input_vector_accepted[i2];i2++;}
+}
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2_rsd[2]=input_vector_accepted[2];
+parameters2_rsd[3]=input_vector_accepted[3];
+for(i=4;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_accepted[i2];parameters2[i-4+dimensionbao+1]=input_vector_accepted[i2];i2++;}
+}
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2_rsd[2]=input_vector_accepted[2];
+parameters2_rsd[3]=input_vector_accepted[3];
+parameters2_rsd[4]=input_vector_accepted[4];
+for(i=5;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_accepted[i2];parameters2[i-5+dimensionbao+1]=input_vector_accepted[i2];i2++;}
+}
 
-L_current=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao, plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd);
+L_current=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao, plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type, FSprior_mean, FSprior_stddev, noise_option,covariance_correction, NrealNGC, NrealSGC);
 
 //for(i=0;i<dimensionbao;i++){printf("BAO-%d=%lf\n",i,parameters2_bao[i]);}
 //for(i=0;i<dimensionrsd;i++){printf("RSD-%d=%lf\n",i,parameters2_rsd[i]);}
@@ -2325,12 +2746,28 @@ if(strcmp(type_of_analysis, "FSBAOANISO") == 0){
 
 parameters2[0]=input_vector_accepted[0];//apara
 parameters2[1]=input_vector_accepted[1];//aperp
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2[2]=input_vector_accepted[2];//f
+i2=3;
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2[2]=input_vector_accepted[2];//m_BGV
+parameters2[3]=input_vector_accepted[3];//f
+i2=4;
+}
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2[2]=input_vector_accepted[2];//m1_BGV
+parameters2[3]=input_vector_accepted[3];//m2_BGV
+parameters2[4]=input_vector_accepted[4];//f
+i2=5;
+}
 
 parameters2_bao[0]=input_vector_accepted[0];//apara
 parameters2_bao[1]=input_vector_accepted[1];//aperp
 
-i1=2;i2=3;
+i1=2;//i2=3;
 if(Nsigmas_free==0)
 {
 
@@ -2341,7 +2778,7 @@ if(Nsigmas_free==0)
   parameters2[3]=Sigma_nl_mean[0];//sigmapara
   parameters2[4]=Sigma_nl_mean[1];//sigmaperp
 
-  i1=4;i2=3;
+  i1=4;//i2=3;
 
   }
   if(strcmp(Sigma_independent, "no") == 0)//Nsigma_tot=1
@@ -2349,7 +2786,7 @@ if(Nsigmas_free==0)
   parameters2_bao[2]=Sigma_nl_mean[0];//sigmapara
   parameters2[3]=Sigma_nl_mean[0];//sigmapara
 
-  i1=3;i2=3;
+  i1=3;//i2=3;
   }
 
 }
@@ -2358,15 +2795,31 @@ for(i=i1+1;i<dimensionbao+1;i++){parameters2[i]=input_vector_accepted[i2];parame
 
 parameters2_rsd[0]=input_vector_accepted[0];
 parameters2_rsd[1]=input_vector_accepted[1];
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2_rsd[2]=input_vector_accepted[2];
 for(i=3;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_accepted[i2];parameters2[i-3+dimensionbao+1]=input_vector_accepted[i2];i2++;}
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2_rsd[2]=input_vector_accepted[2];
+parameters2_rsd[3]=input_vector_accepted[3];
+for(i=4;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_accepted[i2];parameters2[i-4+dimensionbao+1]=input_vector_accepted[i2];i2++;}
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2_rsd[2]=input_vector_accepted[2];
+parameters2_rsd[3]=input_vector_accepted[3];
+parameters2_rsd[4]=input_vector_accepted[4];
+for(i=5;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_accepted[i2];parameters2[i-5+dimensionbao+1]=input_vector_accepted[i2];i2++;}
+}
 
 //for(i=0;i<dimensionbao;i++){printf("BAO-%d=%lf\n",i,parameters2_bao[i]);}
 //for(i=0;i<dimensionrsd;i++){printf("RSD-%d=%lf\n",i,parameters2_rsd[i]);}
 //for(i=0;i<dimension;i++){printf("BAO+RSD-%d=%lf\n",i,parameters2[i]);}
 
 
-L_current=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao, plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd);
+L_current=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao, plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type, FSprior_mean, FSprior_stddev, noise_option,covariance_correction, NrealNGC, NrealSGC);
 
 //printf("FS-BAOANISO %lf\n",//L_current);
 
@@ -2439,10 +2892,18 @@ Doriginal[i]=input_vector_accepted[i];
 if(strcmp(type_of_analysis, "BAOISO") == 0){
 
 parameters2[0]=input_vector_trial[0];i1=1;i2=1;
-if(modeP0bao+modeP2bao+modeP4bao>1){parameters2[1]=input_vector_trial[1];i1=2;i2=2;}
+
+if( strcmp(do_power_spectrum,"yes") == 0){
+
+//if(modeP0bao+modeP2bao+modeP4bao>1){
+if(Nalphas>1){
+parameters2[1]=input_vector_trial[1];i1=2;i2=2;
+}
+
 if(Nsigmas_free==0)
 {
-if(modeP0bao+modeP2bao+modeP4bao==1)
+//if(modeP0bao+modeP2bao+modeP4bao==1)
+if(Nalphas==1)
 {
   if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0 )
   {
@@ -2462,7 +2923,8 @@ if(modeP0bao+modeP2bao+modeP4bao==1)
    parameters2[1]=Sigma_nl_mean[0];i1=2;
   }
 }
-if(modeP0bao+modeP2bao+modeP4bao>1){
+//if(modeP0bao+modeP2bao+modeP4bao>1){
+if(Nalphas>1){ 
   if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0)
   {
   parameters2[2]=Sigma_nl_mean[0];
@@ -2480,17 +2942,32 @@ if(modeP0bao+modeP2bao+modeP4bao>1){
     if(modeP0bao==1 && modeP2bao==1 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[1];i1=4;}
     if(modeP0bao==1 && modeP2bao==0 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[2];i1=4;}
     if(modeP0bao==0 && modeP2bao==1 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[1];parameters2[3]=Sigma_nl_mean[2];i1=4;}
+
+    if(modeP0bao==1 && modeP2bao==0 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[0];i1=3;}//this never will happen anyway I leave it for completeness
+    if(modeP0bao==0 && modeP2bao==1 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[1];i1=3;}//this can happen only if bispect=yes
+    if(modeP0bao==0 && modeP2bao==0 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[2];i1=3;}//this can happen only if bispec=yes
+
   }
   if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "no") == 0){parameters2[2]=Sigma_nl_mean[0];i1=3;}
 }
 }
 
 //for(i=Nalphas+Nsigmas_tot-Nsigmas_free;i<N_Cov_prop;i++){parameters2[i+Nsigmas_tot-Nsigmas_free]=input_vector_trial[i];}//set the rest of parameters
+for(i=i1;i<dimensionP;i++){parameters2[i]=input_vector_trial[i2];i2++;}//set the rest of parameters
+i1=i;
+}//do power
+
+if(strcmp(do_bispectrum,"yes") == 0 ){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=input_vector_trial[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
 for(i=i1;i<dimension;i++){parameters2[i]=input_vector_trial[i2];i2++;}//set the rest of parameters
+}//do bispec
 
 //for(i=0;i<dimension;i++){printf("%d, %lf\n",i,parameters2[i]);}
 
-L_proposed=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC,  Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+L_proposed=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC,  Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC, Bnoise_baoSGC,NeffB0baoSGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC,covariance_correction, NrealNGC, NrealSGC);
 //printf("chi2-baoiso =%lf, %d\n",L_proposed,abs_counter_private);
 
 //exit(0);
@@ -2508,6 +2985,9 @@ if(strcmp(type_of_analysis, "BAOANISO") == 0){
 parameters2[0]=input_vector_trial[0];
 parameters2[1]=input_vector_trial[1];
 i1=2;i2=2;
+
+if( strcmp(do_power_spectrum,"yes") == 0){
+
 if(Nsigmas_free==0)
 {
 
@@ -2528,34 +3008,66 @@ if(Nsigmas_free==0)
 
 }
 
+for(i=i1;i<dimensionP;i++){parameters2[i]=input_vector_trial[i2];i2++;}//set the rest of parameters
+i1=i;
+}//do power
+
+if(strcmp(do_bispectrum,"yes") == 0 ){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=input_vector_trial[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
 for(i=i1;i<dimension;i++){parameters2[i]=input_vector_trial[i2];i2++;}//set the rest of parameters
+}//do bispec
 
 //;for(i=0;i<dimension;i++){printf("%ld, %lf\n",i,parameters2[i]);}
 
-L_proposed=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+L_proposed=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao, P0bao,NeffP0bao, k2bao, P2bao,NeffP2bao, k4bao, P4bao,NeffP4bao, k0baoSGC, P0baoSGC,NeffP0baoSGC, k2baoSGC, P2baoSGC,NeffP2baoSGC, k4baoSGC, P4baoSGC, NeffP4baoSGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1bao, plan2bao, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC, Bnoise_baoSGC,NeffB0baoSGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC,covariance_correction, NrealNGC, NrealSGC);
 //printf("chi2-baoaniso=%lf, %d\n",L_proposed,abs_counter_private);
 //exit(0);
 }
 
 
 
-if(strcmp(type_of_analysis, "FS") == 0){
+if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
 //L_proposed=chi2_rsd();
 
-//printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",input_vector_trial[0],input_vector_trial[1],input_vector_trial[2],input_vector_trial[3],input_vector_trial[4],input_vector_trial[5],input_vector_trial[6],input_vector_trial[7],input_vector_trial[8],input_vector_trial[9],input_vector_trial[10]);
+//printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",input_vector_trial[0],input_vector_trial[1],input_vector_trial[2],input_vector_trial[3],input_vector_trial[4],input_vector_trial[5],input_vector_trial[6],input_vector_trial[7],input_vector_trial[8],input_vector_trial[9],input_vector_trial[10],input_vector_trial[11],input_vector_trial[12],input_vector_trial[13]);
 
-L_proposed=chi2_rsd_mcmc(type_of_analysis,input_vector_trial, Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, Pnoise, k2rsd, P2rsd, k4rsd, P4rsd, k0rsdSGC, P0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC, k4rsdSGC, P4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC,NeffP2rsdSGC,NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd);
+L_proposed=chi2_rsd_mcmc(type_of_analysis,input_vector_trial, Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, Pnoise, k2rsd, P2rsd, k4rsd, P4rsd, k0rsdSGC, P0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC, k4rsdSGC, P4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC,NeffP2rsdSGC,NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,knl, n_func_final, sigma8_x, knl_y,Nknl,k11rsd,k22rsd,k33rsd,B0rsd,Bnoise_rsd,NeffB0rsd,k11rsdSGC,k22rsdSGC,k33rsdSGC,B0rsdSGC,Bnoise_rsdSGC,NeffB0rsdSGC,bispectrum_BQ, mask_matrix, MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type, FSprior_mean, FSprior_stddev, noise_option,covariance_correction, NrealNGC, NrealSGC,P0bao,P0baoSGC);
 
 //if(i_thread==0){printf("chi2 FS kernel=%lf (%d)\n",L_proposed,i_thread);}
-//printf("chi2-FS=%lf\n",L_proposed);
+if(L_proposed<0){
+printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",input_vector_trial[0],input_vector_trial[1],input_vector_trial[2],input_vector_trial[3],input_vector_trial[4],input_vector_trial[5],input_vector_trial[6],input_vector_trial[7],input_vector_trial[8],input_vector_trial[9],input_vector_trial[10],input_vector_trial[11],input_vector_trial[12],input_vector_trial[13]);
+printf("chi2-FS=%lf \n",L_proposed);
+}
 
 }
 
 if(strcmp(type_of_analysis, "FSBAOISO") == 0){
 
+//no bispectrum allowed here
+
 parameters2[0]=input_vector_trial[0];//apara
 parameters2[1]=input_vector_trial[1];//aperp
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2[2]=input_vector_trial[2];//f
+i2=3;
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2[2]=input_vector_trial[2];//m_BGV
+parameters2[3]=input_vector_trial[3];//f
+i2=4;
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2[2]=input_vector_trial[2];//m1_BGV
+parameters2[3]=input_vector_trial[3];//m2_BGV
+parameters2[4]=input_vector_trial[4];//f
+i2=5;
+}
 
 if(modeP0bao+modeP2bao+modeP4bao>1){
 parameters2_bao[0]=input_vector_trial[0];//apara
@@ -2570,7 +3082,7 @@ if(modeP2bao==1){parameters2_bao[0]=pow(input_vector_trial[0],3./5.)*pow(input_v
 if(modeP4bao==1){parameters2_bao[0]=pow(input_vector_trial[0],5./7.)*pow(input_vector_trial[1],2./7.);  }
 }
 
-i1=2;i2=3;
+i1=2;//i2=3;
 
 if(Nsigmas_free==0)
 {
@@ -2684,11 +3196,26 @@ for(i=i1+1;i<dimensionbao+baoiso_shift;i++){parameters2[i]=input_vector_trial[i2
 
 parameters2_rsd[0]=input_vector_trial[0];
 parameters2_rsd[1]=input_vector_trial[1];
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2_rsd[2]=input_vector_trial[2];
 for(i=3;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_trial[i2];parameters2[i-3+dimensionbao+1]=input_vector_trial[i2];i2++;}
+}
 
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2_rsd[2]=input_vector_trial[2];
+parameters2_rsd[3]=input_vector_trial[3];
+for(i=4;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_trial[i2];parameters2[i-4+dimensionbao+1]=input_vector_trial[i2];i2++;}
+}
 
-L_proposed=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao,plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd);
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2_rsd[2]=input_vector_trial[2];
+parameters2_rsd[3]=input_vector_trial[3];
+parameters2_rsd[4]=input_vector_trial[4];
+for(i=5;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_trial[i2];parameters2[i-5+dimensionbao+1]=input_vector_trial[i2];i2++;}
+}
+
+L_proposed=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao,plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd,bispectrum_BQ,mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type, FSprior_mean, FSprior_stddev, noise_option,covariance_correction, NrealNGC, NrealSGC);
 //printf("chi2-FSbaoiso =%lf, %d\n",L_proposed,abs_counter_private);
 }
 
@@ -2696,12 +3223,29 @@ if(strcmp(type_of_analysis, "FSBAOANISO") == 0){
 
 parameters2[0]=input_vector_trial[0];//apara
 parameters2[1]=input_vector_trial[1];//aperp
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2[2]=input_vector_trial[2];//f
+i2=3;
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2[2]=input_vector_trial[2];//m_BGV
+parameters2[3]=input_vector_trial[3];//f
+i2=4;
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2[2]=input_vector_trial[2];//m1_BGV
+parameters2[3]=input_vector_trial[3];//m2_BGV
+parameters2[4]=input_vector_trial[4];//f
+i2=5;
+}
 
 parameters2_bao[0]=input_vector_trial[0];//apara
 parameters2_bao[1]=input_vector_trial[1];//aperp
 
-i1=2;i2=3;
+i1=2;//i2=3;
 if(Nsigmas_free==0)
 {
 
@@ -2712,7 +3256,7 @@ if(Nsigmas_free==0)
   parameters2[3]=Sigma_nl_mean[0];//sigmapara
   parameters2[4]=Sigma_nl_mean[1];//sigmaperp
 
-  i1=4;i2=3;
+  i1=4;//i2=3;
 
   }
   if(strcmp(Sigma_independent, "no") == 0)//Nsigma_tot=1
@@ -2720,7 +3264,7 @@ if(Nsigmas_free==0)
   parameters2_bao[2]=Sigma_nl_mean[0];//sigmapara
   parameters2[3]=Sigma_nl_mean[0];//sigmapara
 
-  i1=3;i2=3;
+  i1=3;//i2=3;
   }
 
 }
@@ -2729,12 +3273,27 @@ for(i=i1+1;i<dimensionbao+1;i++){parameters2[i]=input_vector_trial[i2];parameter
 
 parameters2_rsd[0]=input_vector_trial[0];
 parameters2_rsd[1]=input_vector_trial[1];
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2_rsd[2]=input_vector_trial[2];
 for(i=3;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_trial[i2];parameters2[i-3+dimensionbao+1]=input_vector_trial[i2];i2++;}
+}
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2_rsd[2]=input_vector_trial[2];
+parameters2_rsd[3]=input_vector_trial[3];
+for(i=4;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_trial[i2];parameters2[i-4+dimensionbao+1]=input_vector_trial[i2];i2++;}
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2_rsd[2]=input_vector_trial[2];
+parameters2_rsd[3]=input_vector_trial[3];
+parameters2_rsd[4]=input_vector_trial[4];
+for(i=5;i<dimensionrsd;i++){parameters2_rsd[i]=input_vector_trial[i2];parameters2[i-5+dimensionbao+1]=input_vector_trial[i2];i2++;}
+}
 
 //for(i=0;i<dimensionrsd;i++){printf("%d %lf\n",i,parameters2_rsd[i]);}
 
-L_proposed=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao, plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd);
+L_proposed=chi2_bao_rsd(type_BAO_fit,type_of_analysis,fit_BAO,fit_RSD,parameters2_bao,parameters2_rsd, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin,Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0bao,k0rsd, P0bao,P0rsd,Pnoise,NeffP0bao,NeffP0rsd, k2bao,k2rsd, P2bao,P2rsd,NeffP2bao,NeffP2rsd, k4bao,k4rsd, P4bao,P4rsd,NeffP4bao,NeffP4rsd, k0baoSGC,k0rsdSGC, P0baoSGC,P0rsdSGC,PnoiseSGC,NeffP0baoSGC,NeffP0rsdSGC, k2baoSGC,k2rsdSGC, P2baoSGC,P2rsdSGC,NeffP2baoSGC,NeffP2rsdSGC, k4baoSGC,k4rsdSGC, P4baoSGC,P4rsdSGC, NeffP4baoSGC,NeffP4rsdSGC,cov,covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks, plan1bao, plan2bao, plan1rsd, plan2rsd, do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataNGC_rsd,spacing_dataSGC_bao,spacing_dataSGC_rsd,spacing_theory_bao,spacing_theory_rsd,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type, FSprior_mean, FSprior_stddev, noise_option,covariance_correction, NrealNGC, NrealSGC);
 //printf("chi2-FSbaoaniso =%lf, %d\n",L_proposed,abs_counter_private);
 
 }
@@ -2769,33 +3328,100 @@ for(i=0;i<N_Cov_prop;i++){input_vector_accepted[i]=input_vector_trial[i];}
 
 //exit(0);
 //BAO only
+prior=0;
 if(strcmp(type_of_analysis, "BAOISO") == 0 || strcmp(type_of_analysis, "BAOANISO") == 0 || strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0){
 //previous step is written with its weight
 
-prior=0;
+//Nsigmas_tot is only for P. Needs to be added one for B if do_bispectrum=yes
+
+if( strcmp(do_power_spectrum, "yes") == 0){
+
 for(i=0;i<Nsigmas_tot;i++)
 {
-if(Sigma_type[i]==1){prior=prior+gauss(input_vector_trial[Nalphas+i],Sigma_nl_mean[i],Sigma_nl_stddev[i]);/*printf("prior2 %lf (%lf,%lf,%lf)\n",gauss(input_vector_trial[Nalphas+i],Sigma_nl_mean[i],Sigma_nl_stddev[i]),input_vector_trial[Nalphas+i],Sigma_nl_mean[i],Sigma_nl_stddev[i]);*/}
+if(Sigma_type[i]==1){prior=prior+gauss(input_vector_trial[Nalphas+i],Sigma_nl_mean[i],Sigma_nl_stddev[i]);
+//printf("prior2 %lf (%lf,%lf,%lf)\n",gauss(input_vector_trial[Nalphas+i],Sigma_nl_mean[i],Sigma_nl_stddev[i]),input_vector_trial[Nalphas+i],Sigma_nl_mean[i],Sigma_nl_stddev[i]);
+}
 }
 
 }
+if( strcmp(do_bispectrum,"yes") == 0 ){
 
-if(strcmp(type_of_analysis, "FS") == 0){
-//nothing for RSD, 
-prior=0;
+if(Sigma_type[5]==1 && dimensionP>0){prior=prior+gauss(input_vector_trial[dimensionP],Sigma_nl_mean[5],Sigma_nl_stddev[5]);}// B+P
+if(Sigma_type[5]==1 && dimensionP==0){prior=prior+gauss(input_vector_trial[1],Sigma_nl_mean[5],Sigma_nl_stddev[5]);}//no power spectrum
 }
+
+
+}
+
+if(strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0){
+
+//int prior_anoiseN,prior_anoiseS,prior_b2N,prior_b2S,prior_bs2N,prior_bs2S,prior_b3nlN,prior_b3nlS;
+//Anoise
+if( FSprior_type[0]==1){prior=prior+gauss(parameters2_rsd[prior_anoiseN],FSprior_mean[0],FSprior_stddev[0]);}
+if( FSprior_type[0]==1 && Nchunks == 2){prior=prior+gauss(parameters2_rsd[prior_anoiseS],FSprior_mean[0],FSprior_stddev[0]);}
+//b2
+if( FSprior_type[1]==1 ){prior=prior+gauss(parameters2_rsd[prior_b2N],FSprior_mean[1],FSprior_stddev[1]);}
+if( FSprior_type[1]==1 && Nchunks == 2 ){prior=prior+gauss(parameters2_rsd[prior_b2S],FSprior_mean[1],FSprior_stddev[1]);}
+//b2s2
+if( FSprior_type[2]==1 && strcmp(local_b2s2,"no") == 0 ){prior=prior+gauss(parameters2_rsd[prior_bs2N],FSprior_mean[2],FSprior_stddev[2]);}
+if( FSprior_type[2]==1 && strcmp(local_b2s2,"no") == 0 && Nchunks == 2){prior=prior+gauss(parameters2_rsd[prior_bs2S],FSprior_mean[2],FSprior_stddev[2]);}
+//b3nl
+if( FSprior_type[3]==1 && strcmp(local_b3nl,"no") == 0){prior=prior+gauss(parameters2_rsd[prior_b3nlN],FSprior_mean[3],FSprior_stddev[3]);}
+if( FSprior_type[3]==1 && strcmp(local_b2s2,"no") == 0 && Nchunks == 2 ){prior=prior+gauss(parameters2_rsd[prior_b3nlS],FSprior_mean[3],FSprior_stddev[3]);}
+}
+
+//exit(0);
+if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
+
+//int prior_anoiseN,prior_anoiseS,prior_b2N,prior_b2S,prior_bs2N,prior_bs2S,prior_b3nlN,prior_b3nlS;
+//Anoise
+if( FSprior_type[0]==1){prior=prior+gauss(input_vector_trial[prior_anoiseN],FSprior_mean[0],FSprior_stddev[0]);/*printf("priorN=%lf\n",prior);*/}
+if( FSprior_type[0]==1 && Nchunks == 2){prior=prior+gauss(input_vector_trial[prior_anoiseS],FSprior_mean[0],FSprior_stddev[0]);/*printf("priorS=%lf\n",prior);*/}
+//b2
+if( FSprior_type[1]==1 ){prior=prior+gauss(input_vector_trial[prior_b2N],FSprior_mean[1],FSprior_stddev[1]);}
+if( FSprior_type[1]==1 && Nchunks == 2 ){prior=prior+gauss(input_vector_trial[prior_b2S],FSprior_mean[1],FSprior_stddev[1]);}
+//b2s2
+if( FSprior_type[2]==1 && strcmp(local_b2s2,"no") == 0 ){prior=prior+gauss(input_vector_trial[prior_bs2N],FSprior_mean[2],FSprior_stddev[2]);}
+if( FSprior_type[2]==1 && strcmp(local_b2s2,"no") == 0 && Nchunks == 2){prior=prior+gauss(input_vector_trial[prior_bs2S],FSprior_mean[2],FSprior_stddev[2]);}
+//b3nl
+if( FSprior_type[3]==1 && strcmp(local_b3nl,"no") == 0){prior=prior+gauss(input_vector_trial[prior_b3nlN],FSprior_mean[3],FSprior_stddev[3]);}
+if( FSprior_type[3]==1 && strcmp(local_b2s2,"no") == 0 && Nchunks == 2 ){prior=prior+gauss(input_vector_trial[prior_b3nlS],FSprior_mean[3],FSprior_stddev[3]);}
+//printf("prior=%lf (%lf,%lf)\n",prior,input_vector_trial[prior_anoiseN],input_vector_trial[prior_anoiseS]);exit(0);
+}
+
+
+/*
+if(L_current-prior<=0){printf("Error, chi2 (=%lf) < prior (=%lf)\n",L_current,prior);
+//remove this
+if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
+
+//Anoise
+if( FSprior_type[0]==1){prior=gauss(input_vector_trial[prior_anoiseN],FSprior_mean[0],FSprior_stddev[0]);printf("priorAN=%lf\n",prior);}
+if( FSprior_type[0]==1 && Nchunks == 2){prior=gauss(input_vector_trial[prior_anoiseS],FSprior_mean[0],FSprior_stddev[0]);printf("priorAS=%lf\n",prior);}
+//b2
+if( FSprior_type[1]==1 ){prior=gauss(input_vector_trial[prior_b2N],FSprior_mean[1],FSprior_stddev[1]);printf("priorb2N=%lf\n",prior);}
+if( FSprior_type[1]==1 && Nchunks == 2 ){prior=gauss(input_vector_trial[prior_b2S],FSprior_mean[1],FSprior_stddev[1]);printf("priorb2S=%lf\n",prior);}
+//b2s2
+if( FSprior_type[2]==1 && strcmp(local_b2s2,"no") == 0 ){prior=gauss(input_vector_trial[prior_bs2N],FSprior_mean[2],FSprior_stddev[2]);printf("priorb2s2N=%lf\n",prior);}
+if( FSprior_type[2]==1 && strcmp(local_b2s2,"no") == 0 && Nchunks == 2){prior=gauss(input_vector_trial[prior_bs2S],FSprior_mean[2],FSprior_stddev[2]);printf("priorb2s2S=%lf\n",prior);}
+//b3nl
+if( FSprior_type[3]==1 && strcmp(local_b3nl,"no") == 0){prior=gauss(input_vector_trial[prior_b3nlN],FSprior_mean[3],FSprior_stddev[3]);printf("priorb3nlN=%lf\n",prior);}
+if( FSprior_type[3]==1 && strcmp(local_b2s2,"no") == 0 && Nchunks == 2 ){prior=gauss(input_vector_trial[prior_b3nlS],FSprior_mean[3],FSprior_stddev[3]);printf("priorb3nlS=%lf\n",prior);}
+}
+exit(0);}//this can't happen, this prior has been already added within the chi2!
+*/
 
 if(trial_mcmc==0)
 {
 vector_print[0][counter]=weight;
-vector_print[1][counter]=L_current-prior;
+vector_print[1][counter]=L_current-prior;//we remove the used prior when printing (we don't print the prior!)
 }
 else
 {
 
 if(abs_counter_private>Nburnout){
 vector_buffer[0][i_thread*N_max/nthreads + abs_counter_private - Nburnout-1]=weight;
-vector_buffer[1][i_thread*N_max/nthreads + abs_counter_private - Nburnout-1]=L_current-prior;
+vector_buffer[1][i_thread*N_max/nthreads + abs_counter_private - Nburnout-1]=L_current-prior;//we remove the used prior when printing (we don't print the prior!)
 }
 
 }
@@ -2887,7 +3513,7 @@ weight=1;
 else
 {//up-weight old
 weight++;
-if(weight>=10000){printf("Warning: Weight values > 50000. abs_count=%ld, chi2=%lf. Exiting now...\n",abs_counter_private,L_current);exit(0);} 
+if(weight>=10000){printf("Warning: Weight values > 10000. abs_count=%ld, chi2=%lf. Exiting now...\n",abs_counter_private,L_current);exit(0);} 
 //if(weight>=N_print){printf("Warning: Weight values > %d (N_print). abs_count=%ld, chi2=%lf. Exiting now...\n",weight,abs_counter_private,L_current);exit(0);}
 }
 
@@ -2951,8 +3577,9 @@ min_vector=(double*) calloc(N_Cov_prop+1, sizeof(double));
 do_log_file(nthreads,path_output,name_file_output_mcmc,N_Cov_prop,lines,time_run,abs_counter_shared,j_run_shared,Nburnout,identifier,mean_vector,min_vector);
 write_prop_cov(name_file_output_mcmc,N_Cov_prop);
 
-//for(i=0;i<N_Cov_prop+1;i++){printf("%d %lf\n",i,min_vector[i]);}
+//for(i=0;i<N_Cov_prop+1;i++){printf("%ld %lf\n",i,min_vector[i]);}
 //exit(0);
+
     if( strcmp(do_plot, "yes") == 0 )
     {
 
@@ -3002,11 +3629,18 @@ if(strcmp(type_of_analysis, "FS") == 0){
 
 //for BAO
 if(strcmp(type_of_analysis, "BAOISO") == 0){
+//needs bispectrum
 parameters2[0]=min_vector[0];i1=1;i2=1;
-if(modeP0bao+modeP2bao+modeP4bao>1){parameters2[1]=min_vector[1];i1=2;i2=2;}
+
+if( strcmp(do_power_spectrum,"yes") == 0){
+
+//if(modeP0bao+modeP2bao+modeP4bao>1){
+if(Nalphas>1){
+parameters2[1]=min_vector[1];i1=2;i2=2;}
 if(Nsigmas_free==0)
 {
-if(modeP0bao+modeP2bao+modeP4bao==1)
+//if(modeP0bao+modeP2bao+modeP4bao==1)
+if(Nalphas==1)
 {
   if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0 )
   {
@@ -3026,7 +3660,8 @@ if(modeP0bao+modeP2bao+modeP4bao==1)
    parameters2[1]=Sigma_nl_mean[0];i1=2;
   }
 }
-if(modeP0bao+modeP2bao+modeP4bao>1){
+//if(modeP0bao+modeP2bao+modeP4bao>1){
+if(Nalphas>1){
   if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0)
   {
   parameters2[2]=Sigma_nl_mean[0];
@@ -3042,6 +3677,11 @@ if(modeP0bao+modeP2bao+modeP4bao>1){
     if(modeP0bao==1 && modeP2bao==1 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[1];i1=4;}
     if(modeP0bao==1 && modeP2bao==0 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[2];i1=4;}
     if(modeP0bao==0 && modeP2bao==1 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[1];parameters2[3]=Sigma_nl_mean[2];i1=4;}
+
+    if(modeP0bao==1 && modeP2bao==0 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[0];i1=3;}//this never will happen anyway I leave it for completeness
+    if(modeP0bao==0 && modeP2bao==1 && modeP4bao==0){parameters2[2]=Sigma_nl_mean[1];i1=3;}//this can happen only if bispect=yes
+    if(modeP0bao==0 && modeP2bao==0 && modeP4bao==1){parameters2[2]=Sigma_nl_mean[2];i1=3;}//this can happen only if bispec=yes
+
   }
   if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "no") == 0){parameters2[2]=Sigma_nl_mean[0];i1=3;}
 }
@@ -3049,20 +3689,33 @@ if(modeP0bao+modeP2bao+modeP4bao>1){
 //for(i=Nalphas+Nsigmas_tot-Nsigmas_free;i<N_Cov_prop;i++){parameters2[i+Nsigmas_tot-Nsigmas_free]=min_vector[i];}//set the rest of parameters
 
 //for(i=i1;i<N_Cov_prop+1;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters BUG HERE
-for(i=i1;i<dimension;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters
+for(i=i1;i<dimensionP;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters
+i1=i;
+}
 
+if( strcmp(do_bispectrum,"yes") == 0){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=min_vector[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
+for(i=i1;i<dimension;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters
+}
 
 //printf("Ncov+1=%d, dimension=%d\n",N_Cov_prop+1,dimension);
 
 //for(i=0;i<20;i++){printf("\n%d %lf\n",i,parameters2[i]);}
 
-             make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+//             make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,bispectrum_BQ);
+
+             make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,errB0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC,errB0baoSGC, Bnoise_baoSGC,NeffB0baoSGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC);
+             
 }
 
 if(strcmp(type_of_analysis, "BAOANISO") == 0){
 parameters2[0]=min_vector[0];
 parameters2[1]=min_vector[1];
 i1=2;i2=2;
+if( strcmp(do_power_spectrum,"yes") == 0){
 if(Nsigmas_free==0)
 {
   if(strcmp(Sigma_independent, "yes") == 0)
@@ -3084,9 +3737,22 @@ if(Nsigmas_free==0)
 }
 
 //for(i=i1;i<N_Cov_prop+1;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters BUG HERE???
-for(i=i1;i<dimension;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters 
+for(i=i1;i<dimensionP;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters 
+i1=i;
+}
 
-             make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+if( strcmp(do_bispectrum,"yes") == 0){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=min_vector[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
+for(i=i1;i<dimension;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters
+}
+
+//             make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,bispectrum_BQ);
+
+           make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao, knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,errB0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC,errB0baoSGC, Bnoise_baoSGC,NeffB0baoSGC, bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC);
+
 }
 
 
@@ -3094,24 +3760,41 @@ for(i=i1;i<dimension;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of 
 
 
 //For RSD
-if(strcmp(type_of_analysis, "FS") == 0){
+if(strcmp(type_of_analysis, "FS") == 0 || strcmp(type_of_analysis, "FSalphasrecon") == 0){
 
 
-//make_a_rsd_plot(type_of_analysis,min_vector,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1, plan2, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd);
 
 i2=0;
 for(i=0;i<dimension;i++){parameters2[i]=min_vector[i2];i2++;}//set the rest of parameters 
-make_a_rsd_plot(type_of_analysis,parameters2,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd);
+
+make_a_rsd_plot(type_of_analysis,parameters2,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,knl, n_func_final, sigma8_x, knl_y,Nknl, k11rsd,k22rsd,k33rsd,B0rsd,errB0rsd,Bnoise_rsd,NeffB0rsd,k11rsdSGC,k22rsdSGC,k33rsdSGC,B0rsdSGC,errB0rsdSGC,Bnoise_rsdSGC,NeffB0rsdSGC,bispectrum_BQ, mask_matrix, MatrixFS_mask_NGC, MatrixFS_mask_SGC, noise_option);
 
 
 }
 
 //for BAO+RSD
 if(strcmp(type_of_analysis, "FSBAOISO") == 0){
-
+//no bispectrum allowed here
 parameters2[0]=min_vector[0];//apara
 parameters2[1]=min_vector[1];//aperp
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2[2]=min_vector[2];//f
+i2=3;
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2[2]=min_vector[2];//m_BGV
+parameters2[3]=min_vector[3];//f
+i2=4;
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2[2]=min_vector[2];//m1_BGV
+parameters2[3]=min_vector[3];//m2_BGV
+parameters2[4]=min_vector[4];//f
+i2=5;
+}
 
 //parameters2_bao[0]=min_vector[0];//apara
 //parameters2_bao[1]=min_vector[1];//aperp
@@ -3130,7 +3813,7 @@ if(modeP4bao==1){parameters2_bao[0]=pow(min_vector[0],5./7.)*pow(min_vector[1],2
 }
 
 
-i1=2;i2=3;
+i1=2;//i2=3;
 if(Nsigmas_free==0)
 {
 
@@ -3235,27 +3918,64 @@ for(i=i1+1;i<dimensionbao+baoiso_shift;i++){parameters2[i]=min_vector[i2];parame
 
 parameters2_rsd[0]=min_vector[0];
 parameters2_rsd[1]=min_vector[1];
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2_rsd[2]=min_vector[2];
 for(i=3;i<dimensionrsd;i++){parameters2_rsd[i]=min_vector[i2];parameters2[i-3+dimensionbao+1]=min_vector[i2];i2++;}
+}
+
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2_rsd[2]=min_vector[2];
+parameters2_rsd[3]=min_vector[3];
+for(i=4;i<dimensionrsd;i++){parameters2_rsd[i]=min_vector[i2];parameters2[i-4+dimensionbao+1]=min_vector[i2];i2++;}
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2_rsd[2]=min_vector[2];
+parameters2_rsd[3]=min_vector[3];
+parameters2_rsd[4]=min_vector[4];
+for(i=5;i<dimensionrsd;i++){parameters2_rsd[i]=min_vector[i2];parameters2[i-5+dimensionbao+1]=min_vector[i2];i2++;}
+}
 
 //for(i=0;i<dimensionbao;i++){printf("BAO: %d %lf\n",i,parameters2_bao[i]);}
 //for(i=0;i<dimensionrsd;i++){printf("RSD: %d %lf\n",i,parameters2_rsd[i]);}
 
-    make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2_bao,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+//    make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2_bao,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,bispectrum_BQ);
 
-make_a_rsd_plot(type_of_analysis,parameters2_rsd,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd);
+    make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2_bao,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,do_power_spectrum, do_bispectrum, Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao, knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,errB0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC,errB0baoSGC, Bnoise_baoSGC,NeffB0baoSGC ,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC);
+
+make_a_rsd_plot(type_of_analysis,parameters2_rsd,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,knl, n_func_final, sigma8_x, knl_y,Nknl, k11rsd,k22rsd,k33rsd,B0rsd,errB0rsd,Bnoise_rsd,NeffB0rsd,k11rsdSGC,k22rsdSGC,k33rsdSGC,B0rsdSGC,errB0rsdSGC,Bnoise_rsdSGC,NeffB0rsdSGC,bispectrum_BQ, mask_matrix, MatrixFS_mask_NGC, MatrixFS_mask_SGC,noise_option);
 }
 
+//printf("%s %s %d %d\n", type_of_analysis,RSD_fit,dimensionrsd,dimensionbao);
+//exit(0);
 if(strcmp(type_of_analysis, "FSBAOANISO") == 0){
 
 parameters2[0]=min_vector[0];//apara
 parameters2[1]=min_vector[1];//aperp
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2[2]=min_vector[2];//f
+i2=3;
+}
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2[2]=min_vector[2];//m_BGV
+parameters2[3]=min_vector[3];//f
+i2=4;
+}
+
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2[2]=min_vector[2];//m_BGV
+parameters2[3]=min_vector[3];//m2_BGV
+parameters2[4]=min_vector[4];//f
+i2=5;
+}
+
 
 parameters2_bao[0]=min_vector[0];//apara
 parameters2_bao[1]=min_vector[1];//aperp
 
-i1=2;i2=3;
+i1=2;//i2=3;
 if(Nsigmas_free==0)
 {
 
@@ -3266,7 +3986,7 @@ if(Nsigmas_free==0)
   parameters2[3]=Sigma_nl_mean[0];//sigmapara
   parameters2[4]=Sigma_nl_mean[1];//sigmaperp
 
-  i1=4;i2=3;
+  i1=4;//i2=3;
 
   }
   if(strcmp(Sigma_independent, "no") == 0)//Nsigma_tot=1
@@ -3274,7 +3994,7 @@ if(Nsigmas_free==0)
   parameters2_bao[2]=Sigma_nl_mean[0];//sigmapara
   parameters2[3]=Sigma_nl_mean[0];//sigmapara
 
-  i1=3;i2=3;
+  i1=3;//i2=3;
   }
 
 }
@@ -3283,16 +4003,31 @@ for(i=i1+1;i<dimensionbao+1;i++){parameters2[i]=min_vector[i2];parameters2_bao[i
 
 parameters2_rsd[0]=min_vector[0];
 parameters2_rsd[1]=min_vector[1];
+
+if(strcmp(RSD_fit, "yes") == 0){
 parameters2_rsd[2]=min_vector[2];
 for(i=3;i<dimensionrsd;i++){parameters2_rsd[i]=min_vector[i2];parameters2[i-3+dimensionbao+1]=min_vector[i2];i2++;}
+}
 
-//for(i=0;i<dimensionbao;i++){printf("BAO: %d %lf\n",i,parameters2_bao[i]);}
-//for(i=0;i<dimensionrsd;i++){printf("RSD: %d %lf\n",i,parameters2_rsd[i]);}
+if(strcmp(RSD_fit, "shape") == 0){
+parameters2_rsd[2]=min_vector[2];
+parameters2_rsd[3]=min_vector[3];
+for(i=4;i<dimensionrsd;i++){parameters2_rsd[i]=min_vector[i2];parameters2[i-4+dimensionbao+1]=min_vector[i2];i2++;}
+}
 
+if(strcmp(RSD_fit, "shape2") == 0){
+parameters2_rsd[2]=min_vector[2];
+parameters2_rsd[3]=min_vector[3];
+parameters2_rsd[4]=min_vector[4];
+for(i=5;i<dimensionrsd;i++){parameters2_rsd[i]=min_vector[i2];parameters2[i-5+dimensionbao+1]=min_vector[i2];i2++;}
+}
 
- make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2_bao,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao);
+//for(i=0;i<dimensionbao;i++){printf("BAO: %ld %lf\n",i,parameters2_bao[i]);}
+//for(i=0;i<dimensionrsd;i++){printf("RSD: %ld %lf\n",i,parameters2_rsd[i]);}
+//exit(0);
+ make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2_bao,min_vector[N_Cov_prop], k0bao,P0bao,errP0bao,NeffP0bao,k0baoSGC,P0baoSGC,errP0baoSGC,NeffP0baoSGC, k2bao,P2bao,errP2bao,NeffP2bao,k2baoSGC,P2baoSGC,errP2baoSGC,NeffP2baoSGC,k4bao,P4bao,errP4bao,NeffP4bao,k4baoSGC,P4baoSGC,errP4baoSGC,NeffP4baoSGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1bao,plan2bao,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC_bao,spacing_dataSGC_bao,spacing_theory_bao,knl,sigma8,n_func_final,k11bao,k22bao,k33bao, B0bao,errB0bao,Bnoise_bao,NeffB0bao,k11baoSGC, k22baoSGC, k33baoSGC, B0baoSGC,errB0baoSGC, Bnoise_baoSGC,NeffB0baoSGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC);
 
-make_a_rsd_plot(type_of_analysis,parameters2_rsd,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd);
+make_a_rsd_plot(type_of_analysis,parameters2_rsd,min_vector[N_Cov_prop], Theory,Ntheory, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0rsd, P0rsd, errP0rsd, Pnoise, k2rsd, P2rsd,errP2rsd, k4rsd, P4rsd,errP4rsd, k0rsdSGC, P0rsdSGC,errP0rsdSGC, PnoiseSGC, k2rsdSGC, P2rsdSGC,errP2rsdSGC, k4rsdSGC, P4rsdSGC,errP4rsdSGC, NeffP0rsd, NeffP2rsd, NeffP4rsd,NeffP0rsdSGC, NeffP2rsdSGC, NeffP4rsdSGC, cov, covSGC,  ptmodel_ps, rsdmodel_ps, fogmodel_ps, ptmodel_bs, local_b2s2, local_b3nl,RSD_fit, sigma8_free, fog_free, fog_bs, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier, plan1rsd, plan2rsd, fit_RSD, do_power_spectrum, do_bispectrum,factor_sampling_mask,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,knl, n_func_final, sigma8_x, knl_y,Nknl, k11rsd,k22rsd,k33rsd,B0rsd,errB0rsd,Bnoise_rsd,NeffB0rsd,k11rsdSGC,k22rsdSGC,k33rsdSGC,B0rsdSGC,errB0rsdSGC,Bnoise_rsdSGC,NeffB0rsdSGC,bispectrum_BQ, mask_matrix, MatrixFS_mask_NGC, MatrixFS_mask_SGC,noise_option);
 
 
 }
@@ -3337,8 +4072,11 @@ free(priors_high);
 free(seed);
 }
 
-void do_bao_mcmc(int nthreads, char *type_BAO_fit,char *type_of_analysis,char *fit_BAO,double *k_Plin,double *Plin,int N_Plin, double *k_Olin, double *Olin, int N_Olin, double *pos, double *W0, double *W2, double *W4,double *W6, double *W8,int Nmask, char *path_to_mask1, char *spacing_maskNGC, double *posSGC, double *W0SGC, double *W2SGC, double *W4SGC, double *W6SGC, double *W8SGC, int NmaskSGC, char *path_to_mask2, char *spacing_maskSGC,  double *k0, double *P0, double *errP0, int NeffP0, double *k2, double *P2, double *errP2, int NeffP2, double *k4, double *P4, double *errP4, int NeffP4, double *k11, double *k22, double *k33, double *B0, double *errB0, double *Bnoise, int NeffB0, double *k0SGC, double *P0SGC, double *errP0SGC,int NeffP0SGC, double *k2SGC, double *P2SGC, double *errP2SGC,int NeffP2SGC, double *k4SGC, double *P4SGC, double *errP4SGC,int NeffP4SGC, double *k11SGC, double *k22SGC, double *k33SGC,double *B0SGC, double *errB0SGC, double *BnoiseSGC,int NeffB0SGC, double *cov, double *covSGC, double alpha_min, double alpha_max,  char *Sigma_def_type, char *Sigma_independent, double ffactor, double Sigma_type[], double Sigma_nl_mean[], double Sigma_nl_stddev[], int Npolynomial, int Nchunks, char *path_output, char *identifier, char *do_plot, char *use_prop_cov, char *path_to_cov, long int Nsteps, char *do_power_spectrum, char *do_bispectrum, double Sigma_smooth,char *spacing_dataNGC,char *spacing_dataSGC, char *spacing_theory,char *type_of_analysis_BAO,char *type_of_analysis_FS)
+void do_bao_mcmc(int nthreads, char *type_BAO_fit,char *type_of_analysis,char *fit_BAO,double *k_Plin,double *Plin,int N_Plin, double *k_Olin, double *Olin, int N_Olin, double *pos, double *W0, double *W2, double *W4,double *W6, double *W8,int Nmask, char *path_to_mask1, char *spacing_maskNGC, double *posSGC, double *W0SGC, double *W2SGC, double *W4SGC, double *W6SGC, double *W8SGC, int NmaskSGC, char *path_to_mask2, char *spacing_maskSGC,  double *k0, double *P0, double *errP0, int NeffP0, double *k2, double *P2, double *errP2, int NeffP2, double *k4, double *P4, double *errP4, int NeffP4, double *k11, double *k22, double *k33, double *B0, double *errB0, double *Bnoise, int NeffB0, double *k0SGC, double *P0SGC, double *errP0SGC,int NeffP0SGC, double *k2SGC, double *P2SGC, double *errP2SGC,int NeffP2SGC, double *k4SGC, double *P4SGC, double *errP4SGC,int NeffP4SGC, double *k11SGC, double *k22SGC, double *k33SGC,double *B0SGC, double *errB0SGC, double *BnoiseSGC,int NeffB0SGC, double *cov, double *covSGC, double alpha_min, double alpha_max,  char *Sigma_def_type, char *Sigma_independent, double ffactor, double Sigma_type[], double Sigma_nl_mean[], double Sigma_nl_stddev[], int Npolynomial, int Nchunks, char *path_output, char *identifier, char *do_plot, char *use_prop_cov, char *path_to_cov, long int Nsteps, char *do_power_spectrum, char *do_bispectrum, double Sigma_smooth,char *spacing_dataNGC,char *spacing_dataSGC, char *spacing_theory,char *type_of_analysis_BAO,char *type_of_analysis_FS,char *bispectrum_BQ, int factor_sampling_mask, char *mask_matrix,double **MatrixBAO_mask_NGC, double **MatrixBAO_mask_SGC,double step_size, char *covariance_correction, int NrealNGC, int NrealSGC)
 {
+int i;
+int i1,i2;
+double knl,sigma8;
 double fraction;
 int trial_mcmc;
 long int N_max,N_print,N_burnout,j;
@@ -3346,17 +4084,25 @@ double **vector_buffer;
 FILE *f;
 double *Cov_prop;
 double *vector_mean;
-int N_Cov_prop;
+int N_Cov_prop,N_Cov_propB;
 gsl_matrix *transform_inverse;
 gsl_matrix *transform;
 char name_file[2000];
 long int *params_mcmc;
-int modeP0,modeP2,modeP4;
-int allsigmafixed,Nalphas,Nsigmas_tot,Nsigmas_free;
-int factor_sampling_mask;
+int modeP0,modeP2,modeP4,modeB0;
+int allsigmafixed,Nalphas,Nsigmas_tot,Nsigmas_free;//Nsigma_tot, all sigmas in P (not including B), Nsigma_free, all free sigmas in P
+int Nsigmas_freeB;
 int i_thread;
-
-factor_sampling_mask=10;//Sampling factor boost wrt to Neff max when the mask is applied. How much do I need to sample my model pre-mask-apply in order to have a satisfactory mask response? 10 times seems reasonable.
+double *Plinear_for_knl, *n_func, *k_n_func,*n_func_final;
+double *parameters2;
+int dimension,dimensionP;
+int Nplan;
+double chi2;
+double params[5];
+int Ndof, Npoints, NpointsSGC;
+fftw_complex *a_pointer;a_pointer=NULL;
+fftw_complex *b_pointer;b_pointer=NULL;
+fftw_plan plan1,plan2;
 
 if (nthreads<2){
  
@@ -3366,7 +4112,7 @@ if (nthreads<2){
   f=fopen(name_file,"w");
   if(f==NULL){printf("Error writing %s. Exiting now...\n",name_file);exit(0);}
   fclose(f);
-} else {
+}else{
   for (i_thread=0;i_thread<nthreads;i_thread++){
     
     if(strcmp(type_of_analysis, "BAOISO") == 0){sprintf(name_file,"%s/mcmcBAOISO_output_%s__%d.txt",path_output,identifier,i_thread+1);}
@@ -3382,38 +4128,28 @@ if (nthreads<2){
   else{sprintf(name_file,"%s/mcmcFS_output_%s.txt",path_output,identifier);}
 }
 
-/*
-//Number of free(varied) parameters in each case. 
-if(strcmp(fit_BAO, "P0") == 0 || strcmp(fit_BAO, "P2") == 0 || strcmp(fit_BAO, "P4") == 0)
-{
-if(strcmp(Sigma_nl_type, "fixed")==0){N_Cov_prop=(Npolynomial+1)*Nchunks+1;}// sigma nl is not varied
-else{N_Cov_prop=(Npolynomial+1)*Nchunks+2;}// sigma nl, alpha_para, alpha_perp are varied
-}
-if(strcmp(fit_BAO, "P02") == 0 || strcmp(fit_BAO, "P24") == 0 || strcmp(fit_BAO, "P04") == 0)
-{
-if(strcmp(Sigma_nl_type, "fixed")==0){N_Cov_prop=(Npolynomial+1)*Nchunks*2+2;}// sigma nl is not varied
-else{N_Cov_prop=(Npolynomial+1)*Nchunks*2+3;}// sigma nl, alpha_para, alpha_perp are varied
-}
-
-if(strcmp(fit_BAO, "P024") == 0)
-{
-if(strcmp(Sigma_nl_type, "fixed")==0){N_Cov_prop=(Npolynomial+1)*Nchunks*3+2;}// sigma nl is not varied
-else{N_Cov_prop=(Npolynomial+1)*Nchunks*3+3;}// sigma nl, alpha_para, alpha_perp are varied
-}
-*/
+Nsigmas_free=0;
+Nsigmas_freeB=0;
+Nsigmas_tot=0;
+allsigmafixed=-1;
+Nalphas=1;
+N_Cov_prop=0;
 modeP0=0;
 modeP2=0;
 modeP4=0;
+modeB0=0;
+if( strcmp(do_power_spectrum,"yes") == 0){
+
 if(strcmp(fit_BAO, "P0") == 0 || strcmp(fit_BAO, "P02") == 0 || strcmp(fit_BAO, "P04") == 0 || strcmp(fit_BAO, "P024") == 0 ){modeP0=1;}
 if(strcmp(fit_BAO, "P2") == 0 || strcmp(fit_BAO, "P02") == 0 || strcmp(fit_BAO, "P24") == 0 || strcmp(fit_BAO, "P024") == 0 ){modeP2=1;}
 if(strcmp(fit_BAO, "P4") == 0 || strcmp(fit_BAO, "P04") == 0 || strcmp(fit_BAO, "P24") == 0 || strcmp(fit_BAO, "P024") == 0 ){modeP4=1;}
 
-allsigmafixed=-1;
-Nalphas=1;if(modeP0+modeP2+modeP4>1){Nalphas=2;}
-Nsigmas_free=0;
+
+if(modeP0+modeP2+modeP4>1){Nalphas=2;}
+
 if(strcmp(Sigma_independent, "yes") == 0 ){
 
-    if(strcmp(Sigma_def_type, "para-perp") == 0)//This is the only possible case for BAOANISO
+    if(strcmp(Sigma_def_type, "para-perp") == 0)
     {
        if(Sigma_type[0]>0){Nsigmas_free=Nsigmas_free+1;}
        if(Sigma_type[1]>0){Nsigmas_free=Nsigmas_free+1;}
@@ -3433,24 +4169,283 @@ if(Sigma_type[0]==0){Nsigmas_free=0;}
 }
 if(Nsigmas_free==0){allsigmafixed=0;}
 
-//old baoaniso
-//N_Cov_prop=(Npolynomial+1)*Nchunks*(modeP0+modeP2+modeP4)+Nalphas+Nsigmas_free;//number free  parameters
-//if(strcmp(type_of_analysis, "BAOANISO") == 0){N_Cov_prop++;}//add beta as free parameter
 
 if(strcmp(type_of_analysis, "BAOISO") == 0){N_Cov_prop=(Npolynomial+1)*Nchunks*(modeP0+modeP2+modeP4)+Nalphas+Nsigmas_free;}
 if(strcmp(type_of_analysis, "BAOANISO") == 0){N_Cov_prop=Nchunks*(1+Npolynomial*(modeP0+modeP2+modeP4))+Nalphas+Nsigmas_free+1;}
 
 
-//printf("%d\n",N_Cov_prop++);
-//exit(0);
 if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0){Nsigmas_tot=2;}
 if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "yes") == 0){Nsigmas_tot=modeP0+modeP2+modeP4;}
 if( strcmp(Sigma_independent, "no") == 0 ){Nsigmas_tot=1;}
-//dimension=(Npolynomial+1)*Nchunks*(modeP0+modeP2+modeP4)+Nalphas+Nsigmas_tot;//number total parameters
+
+}//do-power spectrum
+//printf("ncovP=%d\n",N_Cov_prop);
+knl=0;
+sigma8=0;
+N_Cov_propB=0;
+if( strcmp(do_bispectrum,"yes") == 0){
+modeB0=1;
+       if(Sigma_type[5]>0){Nsigmas_freeB=Nsigmas_freeB+1;}
+
+if( strcmp(do_power_spectrum,"yes") == 0 && modeP0+modeP2+modeP4>1){
+N_Cov_propB=(Npolynomial+1)*Nchunks+6*Nchunks+Nsigmas_freeB;}//no extra alphas
+
+if( strcmp(do_power_spectrum,"no") == 0){
+N_Cov_propB=(Npolynomial+1)*Nchunks+6*Nchunks+1+Nsigmas_freeB;}//un parametro mas para alpha0
+
+if( strcmp(do_power_spectrum,"yes") == 0 && modeP0+modeP2+modeP4==1 && modeP0==1){
+N_Cov_propB=(Npolynomial+1)*Nchunks+6*Nchunks+Nsigmas_freeB;}//no extra alphas
 
 
-//if(NeffB0>0){N_Cov_prop=N_Cov_prop+3;}//change this in the future
+if( strcmp(do_power_spectrum,"yes") == 0 && modeP0+modeP2+modeP4==1 && modeP0==0){
+N_Cov_propB=(Npolynomial+1)*Nchunks+6*Nchunks+1+Nsigmas_freeB;Nalphas=2;}//extra alpha (in this case the alpha parameters are apara and aperp). This is (P2 + B0), (P4 + B0). Note that the case P02,P04,P24 with or without B0, had already 2 alphas (apara and aperp)
 
+//compute knl from Plin
+Plinear_for_knl = malloc(sizeof(double)*(N_Plin));
+for(i=0;i<N_Plin;i++){
+if(k_Olin[i]!=k_Plin[i]){printf("Warning, Psm and Olin not computed on the same k's. Fix this...\n");exit(0);}
+Plinear_for_knl[i]=Plin[i]*Olin[i];
+}
+
+
+knl=get_fid_knl(k_Plin,Plinear_for_knl,N_Plin);
+
+sigma8=get_fid_sigma8(k_Plin,Plinear_for_knl,N_Plin);
+free(Plinear_for_knl);
+printf("knl computed for bispectrum: knl=%lf\n",knl);
+printf("sigma8 computed for bispectrum: sigma8=%lf\n",sigma8);
+n_func=malloc(sizeof(double)*(N_Plin-1));
+k_n_func=malloc(sizeof(double)*(N_Plin-1));
+//generate n_array from Psm
+generate_n_array(k_Plin, Plin, N_Plin, n_func, k_n_func);
+
+//smooth array copy AND make it equal to klin
+n_func_final=malloc(sizeof(double)*(N_Plin));
+smooth_n_array(k_Plin, N_Plin, n_func_final, n_func, k_n_func, N_Plin-1);
+
+free(n_func);
+free(k_n_func);
+
+//to be added to mcmc_kernel:
+//double knl
+//double n_func_final[]
+//double sigma8;
+
+if(N_Cov_propB==0){ printf("Error, 0 elements in the covariance of B, but bispectrum=yes. Exiting now...\n");exit(0);}
+
+}//do bispectrum
+
+//exit(0);//check here all is fine before going beyond
+N_Cov_prop=N_Cov_prop+N_Cov_propB;
+//printf("ncovB=%d\n",N_Cov_propB);
+//printf("ncov=%d\n",N_Cov_prop);
+
+if(Nsteps<=0)//in this case we just make  a plot
+{
+printf("Warning, invalid number of steps selected for the mcmc (%ld). Only ploting function at prior set of parameters.\n",Nsteps);
+//need to write parameters2, and compute chi2
+dimension=0;
+dimensionP=0;
+if(strcmp(type_of_analysis, "BAOISO") == 0){
+if( strcmp(do_power_spectrum,"yes") == 0){
+dimension=Nchunks*(Npolynomial+1)*(modeP0+modeP2+modeP4)+Nalphas+Nsigmas_tot;//for parameters plot
+dimensionP=dimension;
+}
+if( strcmp(do_bispectrum,"yes") == 0){
+dimension=dimension+( Nchunks*(Npolynomial+1)+6.*Nchunks+1.0);//+1 is for sigma_B
+
+if( strcmp(do_power_spectrum,"no") == 0){
+dimension++;//add one more for alpha0
+}
+}
+}//BAOISO 
+
+if(strcmp(type_of_analysis, "BAOANISO") == 0){
+if( strcmp(do_power_spectrum,"yes") == 0){
+dimension=Nchunks*(1+Npolynomial*(modeP0+modeP2+modeP4))+Nalphas+Nsigmas_tot+1;//for parameters plot (+1 is for beta)
+dimensionP=dimension;
+}
+if( strcmp(do_bispectrum,"yes") == 0){
+dimension=dimension+( Nchunks*(Npolynomial+1)+6.*Nchunks+1.0);//+1 is for sigma_B
+
+if( strcmp(do_power_spectrum,"no") == 0){
+dimension++;//add one more for alpha0
+}
+}
+}//BAOANISO
+
+parameters2 =  (double*) calloc( dimension, sizeof(double));//printf("dim=%d\n", dimension);
+vector_mean= (double*) calloc( N_Cov_prop, sizeof(double));//zero-inizialized
+
+if(strcmp(use_prop_cov, "yes") == 0)//full mcmc run with proposal
+{
+trial_mcmc=0;
+Cov_prop=(double*) calloc(N_Cov_prop*N_Cov_prop, sizeof(double));
+read_prop_cov(NULL,0,trial_mcmc,path_to_cov,Cov_prop,vector_mean,N_Cov_prop);
+free(Cov_prop);
+}
+if(strcmp(use_prop_cov, "no") == 0)//from set_propsal_mean
+{
+printf("setting proposal mean...\n");
+set_proposal_mean(vector_mean, N_Cov_prop, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, NULL, NULL, NULL, NULL, NULL, NULL,NULL, Nchunks, Npolynomial, path_output,identifier);
+}
+
+if(strcmp(type_of_analysis, "BAOISO") == 0){
+
+parameters2[0]=vector_mean[0];i1=1;i2=1;
+
+if(strcmp(do_power_spectrum,"yes") == 0 ){
+
+
+if(Nalphas>1){parameters2[1]=vector_mean[1];i1=2;i2=2;}//this also includes the sum modeP=1 && modeP0=0 && bispectrum=yes
+
+if(Nsigmas_free==0)
+{
+
+if(Nalphas==1)
+{
+if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0 )
+{
+parameters2[1]=Sigma_nl_mean[0];
+parameters2[2]=Sigma_nl_mean[1];
+i1=3;i2=2;
+}
+if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "no") == 0 ){parameters2[1]=Sigma_nl_mean[0];i1=2;}
+if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "yes") == 0 )
+{
+ if(modeP0==1){parameters2[1]=Sigma_nl_mean[0];}
+ if(modeP2==1){parameters2[1]=Sigma_nl_mean[1];}
+ if(modeP4==1){parameters2[1]=Sigma_nl_mean[2];}
+ i1=2;
+}
+if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "no") == 0 )
+{
+parameters2[1]=Sigma_nl_mean[0];
+i1=2;
+}
+}
+if(Nalphas>1){
+if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "yes") == 0)
+{
+parameters2[2]=Sigma_nl_mean[0];
+parameters2[3]=Sigma_nl_mean[1];
+i1=4;
+}
+if(strcmp(Sigma_def_type, "para-perp") == 0 && strcmp(Sigma_independent, "no") == 0)
+{
+parameters2[2]=Sigma_nl_mean[0];
+i1=3;
+}
+if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "yes") == 0)
+{
+ if(modeP0==1 && modeP2==1 && modeP4==1){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[1];parameters2[4]=Sigma_nl_mean[2];i1=5;}
+ if(modeP0==1 && modeP2==1 && modeP4==0){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[1];i1=4;}
+ if(modeP0==1 && modeP2==0 && modeP4==1){parameters2[2]=Sigma_nl_mean[0];parameters2[3]=Sigma_nl_mean[2];i1=4;}
+ if(modeP0==0 && modeP2==1 && modeP4==1){parameters2[2]=Sigma_nl_mean[1];parameters2[3]=Sigma_nl_mean[2];i1=4;}
+
+ if(modeP0==1 && modeP2==0 && modeP4==0){parameters2[2]=Sigma_nl_mean[0];i1=3;}//this never will happen anyway I leave it for completeness
+ if(modeP0==0 && modeP2==1 && modeP4==0){parameters2[2]=Sigma_nl_mean[1];i1=3;}//this can happen only if bispect=yes
+ if(modeP0==0 && modeP2==0 && modeP4==1){parameters2[2]=Sigma_nl_mean[2];i1=3;}//this can happen only if bispec=yes
+
+}
+if(strcmp(Sigma_def_type, "effective") == 0 && strcmp(Sigma_independent, "no") == 0){parameters2[2]=Sigma_nl_mean[0];i1=3;}
+}
+}//Nsigmas_free==0
+
+
+for(i=i1;i<dimensionP;i++){parameters2[i]=vector_mean[i2];i2++;}//set the rest of parameters of P-NGC
+i1=i;
+
+}//do power
+if(strcmp(do_bispectrum,"yes") == 0 ){
+
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=vector_mean[i2];i2++;i1++;}//free
+
+for(i=i1;i<dimension;i++){parameters2[i]=vector_mean[i2];i2++;}//set the rest of parameters
+
+}//do bispec
+
+}//BAOISO
+
+if(strcmp(type_of_analysis, "BAOANISO") == 0){//this was missing in the previous version
+
+if(strcmp(do_power_spectrum,"yes") == 0 ){
+parameters2[0]=vector_mean[0];
+parameters2[1]=vector_mean[1];
+i1=2;i2=2;
+}
+
+if(strcmp(do_power_spectrum,"no") == 0 ){//in this special case, only one alpha for B0
+parameters2[0]=vector_mean[0];
+i1=1;i2=1;
+}
+
+if(strcmp(do_power_spectrum,"yes") == 0 ){
+
+if(Nsigmas_free==0)
+{
+
+  if(strcmp(Sigma_independent, "yes") == 0)//Nsigma_tot=2
+  {
+  parameters2[2]=Sigma_nl_mean[0];
+  parameters2[3]=Sigma_nl_mean[1];
+  parameters2[4]=vector_mean[2];
+  i1=5;i2=3;
+
+  }
+  if(strcmp(Sigma_independent, "no") == 0)//Nsigma_tot=1
+  {
+  parameters2[2]=Sigma_nl_mean[0];
+  parameters2[3]=vector_mean[2];
+  i1=4;i2=3;
+  }
+
+
+}
+
+for(i=i1;i<dimensionP;i++){parameters2[i]=vector_mean[i2];i2++;}//set the rest of parameters
+//for(i=0;i<dimension;i++){printf("%ld, %lf\n",i,parameters2[i]);}
+i1=i;
+
+}//do power
+
+if(strcmp(do_bispectrum,"yes") == 0 ){
+//add SigmaB
+if(Sigma_type[5]==0){parameters2[i1]=Sigma_nl_mean[5];i1++;}//fixed
+else{parameters2[i1]=vector_mean[i2];i2++;i1++;}//free
+//add 6 betas for Mx add Npoly
+for(i=i1;i<dimension;i++){parameters2[i]=vector_mean[i2];i2++;}//set the rest of parameters
+}//do bispec
+
+}//if BAOANISO
+
+free(vector_mean);
+
+
+set_mask_params(params,0.0,1.0,0.0,1.0,0.0);
+Nplan=(int)(params[2]);
+fftw_complex *a_pointer;a_pointer=NULL;
+fftw_complex *b_pointer;b_pointer=NULL;
+
+    /*fftw_plan*/ plan1 = fftw_plan_dft_1d(Nplan,  a_pointer,  b_pointer,  -1, FFTW_ESTIMATE);//forward plan
+    /*fftw_plan*/ plan2 = fftw_plan_dft_1d(Nplan,  b_pointer,  b_pointer, +1, FFTW_ESTIMATE);//reverse plan
+
+Ndof=N_Cov_prop;
+
+Npoints=NeffP0*modeP0+NeffP2*modeP2+NeffP4*modeP4+NeffB0*modeB0;
+NpointsSGC=0;
+if(Nchunks==2){NpointsSGC=NeffP0SGC*modeP0+NeffP2SGC*modeP2+NeffP4SGC*modeP4+NeffB0SGC*modeB0;}
+
+chi2=chi2_bao(type_BAO_fit,type_of_analysis, fit_BAO ,parameters2, k_Plin, Plin,N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0, P0,NeffP0, k2, P2,NeffP2, k4, P4,NeffP4, k0SGC, P0SGC,NeffP0SGC, k2SGC, P2SGC,NeffP2SGC, k4SGC, P4SGC, NeffP4SGC, cov, covSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev, Npolynomial, Nchunks, plan1, plan2, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory,knl,sigma8,n_func_final,k11,k22,k33, B0,Bnoise,NeffB0,k11SGC, k22SGC, k33SGC, B0SGC, BnoiseSGC,NeffB0SGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC,covariance_correction, NrealNGC, NrealSGC);
+
+make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,chi2, k0,P0,errP0,NeffP0,k0SGC,P0SGC,errP0SGC,NeffP0SGC, k2,P2,errP2,NeffP2,k2SGC,P2SGC,errP2SGC,NeffP2SGC,k4,P4,errP4,NeffP4,k4SGC,P4SGC,errP4SGC,NeffP4SGC, k_Plin, Plin, N_Plin, k_Olin, Olin, N_Olin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent,  ffactor,Sigma_type,  Sigma_nl_mean,  Sigma_nl_stddev,  Npolynomial, Nchunks,Npoints+NpointsSGC,Ndof, path_output, identifier,plan1,plan2,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot, Nsigmas_free,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory,knl,sigma8,n_func_final,k11,k22,k33, B0,errB0,Bnoise,NeffB0,k11SGC, k22SGC, k33SGC, B0SGC,errB0SGC, BnoiseSGC,NeffB0SGC,bispectrum_BQ, mask_matrix, MatrixBAO_mask_NGC, MatrixBAO_mask_SGC);
+//exit(0);
+free(parameters2);
+fftw_destroy_plan(plan1);
+fftw_destroy_plan(plan2);
+printf("Chi2 = %lf / (%d - %d).\n",chi2,Npoints+NpointsSGC,Ndof);
+}else{
 
 if(strcmp(use_prop_cov, "yes") == 0)//full mcmc run with proposal
 {
@@ -3466,12 +4461,12 @@ read_prop_cov(NULL,0,trial_mcmc,path_to_cov,Cov_prop,vector_mean,N_Cov_prop);
 transform_inverse = gsl_matrix_alloc (N_Cov_prop, N_Cov_prop);
 transform = gsl_matrix_alloc (N_Cov_prop, N_Cov_prop);
 
-generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc);//writes transform and transform_inverse
+//generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc);//writes transform and transform_inverse
+generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, NULL, NULL, NULL, NULL, NULL, NULL,NULL, Nchunks, Npolynomial, path_output,identifier);//writes transform and transform_inverse
 
 free(Cov_prop);
 
-//mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,NULL, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0, P0,errP0,NeffP0, k2, P2,errP2,NeffP2, k4, P4,errP4,NeffP4,k11,k22,k33,B0,errB0,Bnoise,NeffB0, k0SGC, P0SGC,errP0SGC,NeffP0SGC, k2SGC, P2SGC,errP2SGC,NeffP2SGC, k4SGC, P4SGC,errP4SGC,NeffP4SGC,k11SGC,k22SGC,k33SGC,B0SGC,BnoiseSGC,NeffB0SGC, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory);
-mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,NULL, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO,NULL, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0,NULL, P0,NULL,errP0,NULL,NeffP0,0, k2,NULL, P2,NULL,errP2,NULL,NeffP2,0, k4,NULL, P4,NULL,errP4,NULL,NeffP4,0,k11,NULL,k22,NULL,k33,NULL,B0,NULL,errB0,NULL,Bnoise,NULL,NeffB0,0, k0SGC,NULL, P0SGC,NULL,errP0SGC,NULL,NeffP0SGC,0, k2SGC,NULL, P2SGC,NULL,errP2SGC,NULL,NeffP2SGC,0, k4SGC,NULL, P4SGC,NULL,errP4SGC,NULL,NeffP4SGC,0,k11SGC,NULL,k22SGC,NULL,k33SGC,NULL,B0SGC,NULL,BnoiseSGC,NULL,NeffB0SGC,0, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL,0, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,NULL,spacing_dataSGC,NULL,spacing_theory,NULL,type_of_analysis_BAO,type_of_analysis_FS);
+mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,NULL, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO,NULL, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0,NULL, P0,NULL,errP0,NULL,NeffP0,0, k2,NULL, P2,NULL,errP2,NULL,NeffP2,0, k4,NULL, P4,NULL,errP4,NULL,NeffP4,0,k11,NULL,k22,NULL,k33,NULL,B0,NULL,errB0,NULL,Bnoise,NULL,NeffB0,0, k0SGC,NULL, P0SGC,NULL,errP0SGC,NULL,NeffP0SGC,0, k2SGC,NULL, P2SGC,NULL,errP2SGC,NULL,NeffP2SGC,0, k4SGC,NULL, P4SGC,NULL,errP4SGC,NULL,NeffP4SGC,0,k11SGC,NULL,k22SGC,NULL,k33SGC,NULL,B0SGC,NULL,errB0SGC,NULL,BnoiseSGC,NULL,NeffB0SGC,0, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL,0, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,NULL,spacing_dataSGC,NULL,spacing_theory,NULL,type_of_analysis_BAO,type_of_analysis_FS,knl,sigma8,n_func_final,NULL,NULL,0,bispectrum_BQ, mask_matrix,MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, NULL, NULL,NULL,NULL,NULL,0,step_size,covariance_correction, NrealNGC, NrealSGC);
 
 
 }
@@ -3488,12 +4483,16 @@ N_max=(long int)(Nsteps*fraction);
 vector_mean= (double*) calloc( N_Cov_prop, sizeof(double));//zero-inizialized
 
 //use proposed mean
-set_proposal_mean(vector_mean,N_Cov_prop);
+//set_proposal_mean(vector_mean,N_Cov_prop);
+set_proposal_mean(vector_mean, N_Cov_prop, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, NULL, NULL, NULL, NULL, NULL, NULL,NULL, Nchunks, Npolynomial, path_output,identifier);
+
 
 transform_inverse = gsl_matrix_alloc (N_Cov_prop, N_Cov_prop);
 transform = gsl_matrix_alloc (N_Cov_prop, N_Cov_prop);
 
-generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc);//writes transform and transform_inverse
+//generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc);//writes transform and transform_inverse
+generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, NULL, NULL, NULL, NULL, NULL, NULL,NULL, Nchunks, Npolynomial, path_output,identifier);//writes transform and transform_inverse
+
 
 vector_buffer = (double**) calloc(N_Cov_prop+2,sizeof(double*));
 
@@ -3502,8 +4501,7 @@ for(j=0;j<N_Cov_prop+2;j++)
    vector_buffer[j] = (double*) calloc(N_max,sizeof(double));
 }
 
-//mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,vector_buffer, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0, P0,errP0,NeffP0, k2, P2,errP2,NeffP2, k4, P4,errP4,NeffP4,k11,k22,k33,B0,errB0,Bnoise,NeffB0, k0SGC, P0SGC,errP0SGC,NeffP0SGC, k2SGC, P2SGC,errP2SGC,NeffP2SGC, k4SGC, P4SGC,errP4SGC,NeffP4SGC,k11SGC,k22SGC,k33SGC,B0SGC,BnoiseSGC,NeffB0SGC, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks, path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,NULL, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory);
-mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,vector_buffer, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO,NULL, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0,NULL, P0,NULL,errP0,NULL,NeffP0,0, k2,NULL, P2,NULL,errP2,NULL,NeffP2,0, k4,NULL, P4,NULL,errP4,NULL,NeffP4,0,k11,NULL,k22,NULL,k33,NULL,B0,NULL,errB0,NULL,Bnoise,NULL,NeffB0,0, k0SGC,NULL, P0SGC,NULL,errP0SGC,NULL,NeffP0SGC,0, k2SGC,NULL, P2SGC,NULL,errP2SGC,NULL,NeffP2SGC,0, k4SGC,NULL, P4SGC,NULL,errP4SGC,NULL,NeffP4SGC,0,k11SGC,NULL,k22SGC,NULL,k33SGC,NULL,B0SGC,NULL,BnoiseSGC,NULL,NeffB0SGC,0, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL,0, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,NULL,spacing_dataSGC,NULL,spacing_theory,NULL,type_of_analysis_BAO,type_of_analysis_FS);
+mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,vector_buffer, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO,NULL, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0,NULL, P0,NULL,errP0,NULL,NeffP0,0, k2,NULL, P2,NULL,errP2,NULL,NeffP2,0, k4,NULL, P4,NULL,errP4,NULL,NeffP4,0,k11,NULL,k22,NULL,k33,NULL,B0,NULL,errB0,NULL,Bnoise,NULL,NeffB0,0, k0SGC,NULL, P0SGC,NULL,errP0SGC,NULL,NeffP0SGC,0, k2SGC,NULL, P2SGC,NULL,errP2SGC,NULL,NeffP2SGC,0, k4SGC,NULL, P4SGC,NULL,errP4SGC,NULL,NeffP4SGC,0,k11SGC,NULL,k22SGC,NULL,k33SGC,NULL,B0SGC,NULL,errB0SGC,NULL,BnoiseSGC,NULL,NeffB0SGC,0, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL,0, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,NULL,spacing_dataSGC,NULL,spacing_theory,NULL,type_of_analysis_BAO,type_of_analysis_FS,knl,sigma8,n_func_final,NULL,NULL,0,bispectrum_BQ,mask_matrix,MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, NULL, NULL,NULL,NULL,NULL,0,step_size,covariance_correction, NrealNGC, NrealSGC);
 
 free(vector_mean);
 
@@ -3520,14 +4518,19 @@ fraction=1;
 
 transform_inverse = gsl_matrix_alloc (N_Cov_prop, N_Cov_prop);
 transform = gsl_matrix_alloc (N_Cov_prop, N_Cov_prop);
-generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc);//writes transform and transform_inverse
+//generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc);//writes transform and transform_inverse
+generate_rotation_matrix(N_Cov_prop,Cov_prop,vector_mean,transform_inverse,transform,trial_mcmc, type_of_analysis, fit_BAO, do_power_spectrum, do_bispectrum, Sigma_def_type, Sigma_independent, Sigma_type, NULL, NULL, NULL, NULL, NULL, NULL,NULL, Nchunks, Npolynomial, path_output,identifier);//writes transform and transform_inverse
 
 free(Cov_prop);
 
-//mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,vector_buffer,fraction, N_Cov_prop,transform, transform_inverse,vector_mean, name_file, fit_BAO,k_Plin,Plin,N_Plin,k_Olin,Olin,N_Olin,pos,W0,W2,W4,W6,W8,Nmask,path_to_mask1,spacing_maskNGC,posSGC,W0SGC,W2SGC,W4SGC, W6SGC, W8SGC,NmaskSGC, path_to_mask2,spacing_maskSGC, k0, P0, errP0,NeffP0,k2,P2, errP2, NeffP2, k4,P4, errP4,NeffP4, k11,k22, k33, B0, errB0, Bnoise, NeffB0, k0SGC, P0SGC, errP0SGC,NeffP0SGC, k2SGC, P2SGC, errP2SGC,NeffP2SGC, k4SGC, P4SGC, errP4SGC,NeffP4SGC, k11SGC, k22SGC, k33SGC,B0SGC, BnoiseSGC,NeffB0SGC, cov,covSGC, alpha_min, alpha_max,  Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks, path_output, identifier, do_plot, Nsteps, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL, Sigma_smooth,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory);
-mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,vector_buffer, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO,NULL, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0,NULL, P0,NULL,errP0,NULL,NeffP0,0, k2,NULL, P2,NULL,errP2,NULL,NeffP2,0, k4,NULL, P4,NULL,errP4,NULL,NeffP4,0,k11,NULL,k22,NULL,k33,NULL,B0,NULL,errB0,NULL,Bnoise,NULL,NeffB0,0, k0SGC,NULL, P0SGC,NULL,errP0SGC,NULL,NeffP0SGC,0, k2SGC,NULL, P2SGC,NULL,errP2SGC,NULL,NeffP2SGC,0, k4SGC,NULL, P4SGC,NULL,errP4SGC,NULL,NeffP4SGC,0,k11SGC,NULL,k22SGC,NULL,k33SGC,NULL,B0SGC,NULL,BnoiseSGC,NULL,NeffB0SGC,0, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL,0, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,NULL,spacing_dataSGC,NULL,spacing_theory,NULL,type_of_analysis_BAO,type_of_analysis_FS);
+mcmc_kernel(nthreads,type_BAO_fit,type_of_analysis,trial_mcmc,vector_buffer, fraction, N_Cov_prop, transform, transform_inverse, vector_mean, name_file, fit_BAO,NULL, k_Plin, Plin, N_Plin,k_Olin,Olin,N_Olin, pos, W0, W2, W4, W6, W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, k0,NULL, P0,NULL,errP0,NULL,NeffP0,0, k2,NULL, P2,NULL,errP2,NULL,NeffP2,0, k4,NULL, P4,NULL,errP4,NULL,NeffP4,0,k11,NULL,k22,NULL,k33,NULL,B0,NULL,errB0,NULL,Bnoise,NULL,NeffB0,0, k0SGC,NULL, P0SGC,NULL,errP0SGC,NULL,NeffP0SGC,0, k2SGC,NULL, P2SGC,NULL,errP2SGC,NULL,NeffP2SGC,0, k4SGC,NULL, P4SGC,NULL,errP4SGC,NULL,NeffP4SGC,0,k11SGC,NULL,k22SGC,NULL,k33SGC,NULL,B0SGC,NULL,errB0SGC,NULL,BnoiseSGC,NULL,NeffB0SGC,0, cov, covSGC, alpha_min,alpha_max, Sigma_def_type, Sigma_independent,  ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,  path_output, identifier, do_plot,Nsteps,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free, NULL,0, 0, 0, NULL, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL,NULL,Sigma_smooth,factor_sampling_mask,spacing_dataNGC,NULL,spacing_dataSGC,NULL,spacing_theory,NULL,type_of_analysis_BAO,type_of_analysis_FS,knl,sigma8,n_func_final,NULL,NULL,0,bispectrum_BQ, mask_matrix,MatrixBAO_mask_NGC, MatrixBAO_mask_SGC, NULL, NULL,NULL,NULL,NULL,0,step_size,covariance_correction, NrealNGC, NrealSGC);
 
+free(vector_mean);
 }
+
+}//Nsteps>0
+
+if( strcmp(do_bispectrum,"yes") == 0){free(n_func_final);}
 
 
 }
