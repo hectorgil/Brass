@@ -1196,3 +1196,67 @@ for(j=0;j<Nout;j++)
 //end
 }
 
+
+void order(double ctheta12,double ctheta13,double ctheta23,double params[])
+{
+double max,min,med;
+
+if(ctheta12>=ctheta13 && ctheta12>=ctheta23)
+{
+   max=ctheta12;
+   if(ctheta13>=ctheta23)
+   {
+     med=ctheta13;
+     min=ctheta23;
+   }
+   else
+   {
+     min=ctheta13;
+     med=ctheta23;
+   }
+
+}
+else
+{
+
+   if(ctheta13>=ctheta12 && ctheta13>=ctheta23)
+   {
+      max=ctheta13;
+      if(ctheta12>=ctheta23)
+      {
+         med=ctheta12;
+         min=ctheta23;
+      }
+      else
+      {
+         min=ctheta12;
+         med=ctheta23;
+      }
+
+   }
+   else
+   {
+     max=ctheta23;
+     if(ctheta12>=ctheta13)
+     {
+       med=ctheta12;
+       min=ctheta13;
+     }
+     else
+     {
+       min=ctheta12;
+       med=ctheta13;
+     }
+
+   }
+
+
+}
+
+
+params[0]=max;
+params[1]=med;
+params[2]=min;
+
+}
+

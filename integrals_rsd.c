@@ -40,14 +40,14 @@ void Preal(double *kin,double *Pin,int Nin, void *fdata)
         f_params params_function = *(f_params *) fdata;
 
     int i,N;
-    double k1p,aiso,Pdd,alpha_perpendicular,alpha_parallel,sigma8_scaling,mBGV,m2BGV;
+    double k1p,mu,mup,aiso,Pdd,alpha_perpendicular,alpha_parallel,sigma8_scaling,sigma8_scaling_input,mBGV,m2BGV,Fap;
     double **Theory;
     char *ptmodel;
     int N1;
     double w1,w0,w2;
     int interpolation_order,shiftN;
     char *spacing;
-    double shape_factor,s8;
+    double shape_factor;
     double kpivot=0.03;//this scale corresponds to 8Mpc/h
     double ascale=0.6;//scale at which the asymptotes are reached
 
@@ -62,20 +62,23 @@ void Preal(double *kin,double *Pin,int Nin, void *fdata)
     alpha_parallel=params_function.a_parallel;
     mBGV=params_function.mBGV;
     m2BGV=params_function.m2BGV;
-    sigma8_scaling=params_function.sigma8;
+    sigma8_scaling_input=params_function.sigma8;
     Theory=params_function.theory;
     ptmodel=params_function.type_ptmodel;
 
-aiso=pow(alpha_perpendicular*alpha_perpendicular*alpha_parallel,1./3.);
+    Fap=alpha_parallel*1./alpha_perpendicular*1.;
+    mup=mu/Fap*pow(1.+mu*mu*(1./(Fap*Fap)-1),-0.5);
+    aiso=1./alpha_perpendicular*pow( 1+mu*mu*(1./(Fap*Fap)-1) ,0.5);//this is a multiplicative factor to k (not aiso but 1/aiso)
+
+//printf("%s %d %lf %lf %lf %lf %lf %s %lf %lf %lf\n",spacing,N,alpha_perpendicular,alpha_parallel,mBGV,m2BGV,sigma8_scaling,ptmodel,Fap,mup,aiso);
+
 for(i=0;i<Nin;i++)
 {
 
-//k1p=kin[i]*aiso;//changed on the 15th Sept. 2022
-k1p=kin[i]/aiso;
+    k1p=kin[i]*aiso;//This is not aiso, but 1/aiso, therefore kp=k/aiso
+    shape_factor=exp(  mBGV*log(k1p/(kpivot*aiso))+m2BGV/ascale*tanh(ascale*log(k1p/(kpivot*aiso))) );
+    sigma8_scaling=shape_factor*sigma8_scaling_input;//trial option. Put shape factor at the same level as s8**2
 
-shape_factor=exp(  mBGV*log(k1p/(kpivot*aiso))+m2BGV/ascale*tanh(ascale*log(k1p/(kpivot*aiso))) );
-s8=params_function.sigma8;
-sigma8_scaling=shape_factor*s8;//trial option. Put shape factor at the same level as s8**2
 
 N1=determine_N_doublearray(Theory,k1p,N,spacing);
 if(N1>=N-shiftN || N1<0 || k1p<=0 || kin[i]<=0){Pdd=0;}
@@ -102,6 +105,8 @@ if( strcmp(ptmodel, "2L-RPT") == 0){Pdd =(sigma8_scaling*P_interpol_fast_doublea
 
 }
 
+
+
 Pin[i]=Pdd;
 
 }
@@ -112,10 +117,13 @@ void integralB(unsigned ndim, const double *x, void *fdata, unsigned fdim, doubl
 {
         f_params params_function = *(f_params *) fdata;
 
-    int Nelements;
+    int N;
+    double params[3],ctheta12,ctheta13,ctheta23;
     double b1,b2,bs2;
-    double alpha_perpendicular,alpha_parallel,F,sigma_bs,sigma_bs4,avir;
-
+    double alpha_perpendicular,alpha_parallel,F,sigma_bs,sigma_bs4,avir,aiso1,aiso2;
+    double mBGV,m2BGV,sigma8_scaling,sigma8_scaling1,sigma8_scaling2,redshift_in;
+    
+    double geo,cthetha_med,ctheta_min,ctheta_max,Area,s;
     double fog=-1;
     char *fog_model_bs, *bismodel;
     double **Theory;
@@ -126,21 +134,51 @@ void integralB(unsigned ndim, const double *x, void *fdata, unsigned fdim, doubl
     double beta;
     double *n;
     double sigma8,knl;
+    double P1,P2,Pdd;
+    double *kreal,*Preal;
+    int Nreal;
+    char *mask;
+    char *spacing;
+    char *ptmodel;
+    int N1,shiftN;
+    double w0,w1,w2;
+    double nophysical=-1;
+    double kpivot=0.03;//this scale corresponds to 8Mpc/h
+    double ascale=0.6;//scale at which the asymptotes are reached
+    double shape_factor1,shape_factor2;    
+    double unphysical=-1;
+    int interpolation_order;
+    interpolation_order=1;//1 or 2
 
-    Nelements=params_function.N;
+    if(interpolation_order==1){shiftN=1;}
+    if(interpolation_order==2){shiftN=2;}
+
+    redshift_in=params_function.redshift_in;
+    mask=params_function.mask;
+    spacing=params_function.spacing;//this is the spacing of Theory and kreal (is the same)
+    N=params_function.N;//this is N elements of Theory
     b1=params_function.b1;
     b2=params_function.b2;
     bs2=params_function.bs2;
     Theory=params_function.theory;
+    ptmodel=params_function.type_ptmodel;
+
+    if(strcmp(mask,"none")!=0){//if mask exist then Preal must be inputed
+    kreal=params_function.kreal;
+    Preal=params_function.Preal;
+    Nreal=params_function.Nreal;}
+
 
     alpha_perpendicular=params_function.a_perpendicular;
     alpha_parallel=params_function.a_parallel;
     F=params_function.f;
     sigma8=params_function.sigma8_value;
- 
+    sigma8_scaling=params_function.sigma8;
+    mBGV=params_function.mBGV;
+    m2BGV=params_function.m2BGV; 
+
     knl=params_function.knl;
     n=params_function.n;
- 
     beta=F/b1;
     sigma_bs=params_function.sigmaB;
     avir=params_function.avir;
@@ -165,18 +203,160 @@ void integralB(unsigned ndim, const double *x, void *fdata, unsigned fdim, doubl
     x12p=(x12+mu1*mu2*(1./(Fap*Fap)-1.))*pow(1.+mu1*mu1*(1./(Fap*Fap)-1),-0.5)*pow(1.+mu2*mu2*(1./(Fap*Fap)-1.),-0.5);
     k3p=pow(k1p*k1p+k2p*k2p+2.*k1p*k2p*x12p,0.5);
 
-if(fabs(x12p)<=1.)//-1<=cos()<=1 for that triangle to exist (i.e. to be a set of vectors which can close into a triangle)
+    aiso1=1./alpha_perpendicular*pow( 1+mu1*mu1*(1./(Fap*Fap)-1) ,0.5);//this is a multiplicative factor to k (not aiso but 1/aiso)
+    aiso2=1./alpha_perpendicular*pow( 1+mu2*mu2*(1./(Fap*Fap)-1) ,0.5);//this is a multiplicative factor to k (not aiso but 1/aiso)
+
+    shape_factor1=exp(  mBGV*log(k1p/(kpivot*aiso1))+m2BGV/ascale*tanh(ascale*log(k1p/(kpivot*aiso1))) );
+    shape_factor2=exp(  mBGV*log(k2p/(kpivot*aiso2))+m2BGV/ascale*tanh(ascale*log(k2p/(kpivot*aiso2))) );
+
+    sigma8_scaling1=shape_factor1*sigma8_scaling;//trial option. Put shape factor at the same level as s8**2
+    sigma8_scaling2=shape_factor2*sigma8_scaling;//trial option. Put shape factor at the same level as s8**2
+
+if( strcmp(mask,"none") == 0)
+{
+//determine P1 and P2 from Theory in an exact way
+
+N1=determine_N_doublearray(Theory,k1p,N,spacing);
+sigma8_scaling=sigma8_scaling1;
+
+if(N1>=N-shiftN || N1<0 || k1p<=0 || k1_input<=0){unphysical=0;}
+else{
+
+if(interpolation_order==1){
+w1=determine_w1_doublearray(Theory,k1p,N1,spacing);
+}
+if(interpolation_order==2){
+w0=determine_w0_2ndorder_doublearray(Theory,k1p,N1,spacing);
+w1=determine_w1_2ndorder_doublearray(Theory,k1p,N1,spacing);
+w2=determine_w2_2ndorder_doublearray(Theory,k1p,N1,spacing);
+}
+
+if( strcmp(bismodel, "tree-level") == 0 ){ Pdd = sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2);}
+else{
+
+if( strcmp(ptmodel, "linear") == 0){Pdd = sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2);}
+
+if( strcmp(ptmodel, "1L-SPT") == 0){Pdd = sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*(P_interpol_fast_doublearray(k1p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k1p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2));}
+
+if( strcmp(ptmodel, "2L-SPT") == 0){Pdd = sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*(P_interpol_fast_doublearray(k1p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k1p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2))+sigma8_scaling*sigma8_scaling*sigma8_scaling*(P_interpol_fast_doublearray(k1p,Theory,5,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k1p,Theory,12,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k1p,Theory,10,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k1p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2)*P_interpol_fast_doublearray(k1p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2)/(4.*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)));}
+
+if( strcmp(ptmodel, "1L-RPT") == 0){Pdd = (sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2))*exp(sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2)/P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2));}
+
+if( strcmp(ptmodel, "2L-RPT") == 0){Pdd =(sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,5,N,spacing,interpolation_order,N1,w0,w1,w2))*N2(sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2),sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2),sigma8_scaling*sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k1p,Theory,10,N,spacing,interpolation_order,N1,w0,w1,w2));}
+}
+
+P1=Pdd;
+}
+
+//P2
+N1=determine_N_doublearray(Theory,k2p,N,spacing);
+sigma8_scaling=sigma8_scaling2;
+
+if(N1>=N-shiftN || N1<0 || k2p<=0 || k2_input<=0){unphysical=0;}
+else{
+
+if(interpolation_order==1){
+w1=determine_w1_doublearray(Theory,k2p,N1,spacing);
+}
+if(interpolation_order==2){
+w0=determine_w0_2ndorder_doublearray(Theory,k2p,N1,spacing);
+w1=determine_w1_2ndorder_doublearray(Theory,k2p,N1,spacing);
+w2=determine_w2_2ndorder_doublearray(Theory,k2p,N1,spacing);
+}
+
+if( strcmp(bismodel, "tree-level") == 0 ){ Pdd = sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2);}
+else{
+
+if( strcmp(ptmodel, "linear") == 0){Pdd = sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2);}
+
+if( strcmp(ptmodel, "1L-SPT") == 0){Pdd = sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*(P_interpol_fast_doublearray(k2p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k2p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2));}
+
+if( strcmp(ptmodel, "2L-SPT") == 0){Pdd = sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*(P_interpol_fast_doublearray(k2p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k2p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2))+sigma8_scaling*sigma8_scaling*sigma8_scaling*(P_interpol_fast_doublearray(k2p,Theory,5,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k2p,Theory,12,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k2p,Theory,10,N,spacing,interpolation_order,N1,w0,w1,w2)+P_interpol_fast_doublearray(k2p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2)*P_interpol_fast_doublearray(k2p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2)/(4.*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)));}
+
+if( strcmp(ptmodel, "1L-RPT") == 0){Pdd = (sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2))*exp(sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2)/P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2));}
+
+if( strcmp(ptmodel, "2L-RPT") == 0){Pdd =(sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,2,N,spacing,interpolation_order,N1,w0,w1,w2)+sigma8_scaling*sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,5,N,spacing,interpolation_order,N1,w0,w1,w2))*N2(sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,1,N,spacing,interpolation_order,N1,w0,w1,w2),sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,8,N,spacing,interpolation_order,N1,w0,w1,w2),sigma8_scaling*sigma8_scaling*sigma8_scaling*P_interpol_fast_doublearray(k2p,Theory,10,N,spacing,interpolation_order,N1,w0,w1,w2));}
+}
+
+P2=Pdd;
+}
+
+
+}
+else//mask
+{
+//printf("kp1=%lf\n",k1p);
+
+N1=determine_N_singlearray(kreal,k1p,N,spacing);
+if(N1>=N-shiftN || N1<0 ||  k1p<=0 || k1_input<=0){nophysical=0;}
+
+
+if(interpolation_order==1){
+    w1=determine_w1_singlearray(kreal,k1p,N1,spacing);
+//    printf("w1=%lf; kreal[0]=%lf < kreal < kreal[N-1]=%lf (%s)\n",w1,kreal[0],kreal[N-1],spacing);
+}
+if(interpolation_order==2){
+w0=determine_w0_2ndorder_singlearray(kreal,k1p,N1,spacing);
+w1=determine_w1_2ndorder_singlearray(kreal,k1p,N1,spacing);
+w2=determine_w2_2ndorder_singlearray(kreal,k1p,N1,spacing);
+}
+
+P1=P_interpol_fast(k1p,Preal,N,spacing,interpolation_order,N1,w0,w1,w2);
+//    printf("P1=%lf\n",P1);
+
+//same for 2
+
+N1=determine_N_singlearray(kreal,k2p,N,spacing);
+if(N1>=N-shiftN || N1<0 ||  k2p<=0 || k2_input<=0){nophysical=0;}
+if(interpolation_order==1){
+    w1=determine_w1_singlearray(kreal,k2p,N1,spacing);
+}
+if(interpolation_order==2){
+w0=determine_w0_2ndorder_singlearray(kreal,k2p,N1,spacing);
+w1=determine_w1_2ndorder_singlearray(kreal,k2p,N1,spacing);
+w2=determine_w2_2ndorder_singlearray(kreal,k2p,N1,spacing);
+}
+
+P2=P_interpol_fast(k2p,Preal,N,spacing,interpolation_order,N1,w0,w1,w2);
+
+}
+
+
+if(fabs(x12p)<=1. && nophysical==-1)//-1<=cos()<=1 for that triangle to exist (i.e. to be a set of vectors which can close into a triangle)
 {
 
 if(strcmp(bismodel,"GilMarin14") == 0)
 {
-F12=F2_eff( k1p, k2p, k3p, knl, Theory, NULL, n,Nelements,sigma8);
-G12=G2_eff( k1p, k2p, k3p, knl, Theory, NULL,n,Nelements,sigma8);
+F12=F2_eff( k1p, k2p, k3p, knl, Theory, NULL, n,N,sigma8);
+G12=G2_eff( k1p, k2p, k3p, knl, Theory, NULL,n,N,sigma8);
 }
-if(strcmp(bismodel,"tree-level") == 0)
+if(strcmp(bismodel,"tree-level") == 0 || strcmp(bismodel,"GEO23") == 0)
 {
 F12=F2( k1p, k2p, k3p);
 G12=G2( k1p, k2p, k3p);
+
+}
+
+if(strcmp(bismodel,"GEO23") == 0)
+{
+s=0.5*(k1p+k2p+k3p);
+Area=pow(s*(s-k1p)*(s-k2p)*(s-k3p),0.5);
+
+ctheta12=(k3p*k3p-k1p*k1p-k2p*k2p)/(2.*k1p*k2p);//these is the EXTERNAL angle of the triangle
+ctheta13=(k2p*k2p-k1p*k1p-k3p*k3p)/(2.*k1p*k3p);//idem
+ctheta23=(k1p*k1p-k3p*k3p-k2p*k2p)/(2.*k2p*k3p);//idem
+
+order(ctheta12,ctheta13,ctheta23,params);
+//ctheta_min=params[0];//this is the minimum theta, i.e. the largest cos(theta)
+//ctheta_med=params[1];//this is the medium theta, i.e. the medium cos(theta)
+//ctheta_max=params[2];//this is the maximum theta, i.e. the minimum cos(theta)
+
+geo=geo_factor(redshift_in, Area, params[0], params[1], params[2]);
+
+}
+else
+{
+geo=1;
 }
 //if(strcmp(bismodel,"GilMarin14") != 0 && strcmp(bismodel,"tree-level") != 0){printf("Error with bispectrum model  (%s). Exiting...\n",bismodel);exit(0);}
 
@@ -199,7 +379,7 @@ fog=pow(1.+(pow(k1p*k1p*mu1p*mu1p+k2p*k2p*mu2p*mu2p+pow( mu1p*k1p+mu2p*k2p ,2),2
 
 //        if(fog<0){printf("Error with fog...\n");exit(0);}
 
-        fval[0]=(F12s*(1+mu1p*mu1p*beta)*(1+mu2p*mu2p*beta)*b1*b1)*fog/(4.*Pi);
+        fval[0]=P1*P2*(F12s*(1+mu1p*mu1p*beta)*(1+mu2p*mu2p*beta)*b1*b1)*fog/(4.*Pi);
 
 //printf("F12s=%lf, beta=%lf, b1=%lf, fog=%lf, arg=%lf\n",F12s,beta,b1,fog,1+sigma_bs4/2.*pow(k1p*k1p*mu1p*mu1p+k2p*k2p*mu2p*mu2p+pow( mu1p*k1p+mu2p*k2p ,2),2) );
 
@@ -350,7 +530,7 @@ void integralP(unsigned ndim, const double *x, void *fdata, unsigned fdim, doubl
     
     int N, nomask,noise_option;
     double b1,b2,bs2,b3nl,Anoise,Pnoise;
-    double aiso,alpha_perpendicular,alpha_parallel,F,sigma8_scaling,sigma_ps,mBGV,m2BGV,s8,kpivot,shape_factor,ascale,avir;
+    double aiso,alpha_perpendicular,alpha_parallel,F,sigma8_scaling,sigma_ps,mBGV,m2BGV,kpivot,shape_factor,ascale,avir;
     double **Theory;
     double a11,a12,a22,a23,a33;
     double b1_11,b1_12,b1_21,b1_22;
@@ -386,8 +566,7 @@ void integralP(unsigned ndim, const double *x, void *fdata, unsigned fdim, doubl
     F=params_function.f;
     mBGV=params_function.mBGV;
     m2BGV=params_function.m2BGV;
-//    sigma8_scaling=params_function.sigma8;
-    s8=params_function.sigma8;
+    sigma8_scaling=params_function.sigma8;
     sigma_ps=params_function.sigmaP;
     avir=params_function.avir;
     Theory=params_function.theory;
@@ -405,10 +584,9 @@ void integralP(unsigned ndim, const double *x, void *fdata, unsigned fdim, doubl
 
     N1=determine_N_doublearray(Theory,k1p,N,spacing);
 
-aiso=1./alpha_perpendicular*pow( 1+mu*mu*(1./(Fap*Fap)-1) ,0.5);
- //   shape_factor=1+mBGV*(log10(k1p)-log10(kpivot));
-      shape_factor=exp(  mBGV*log(k1p/(kpivot*aiso))+m2BGV/ascale*tanh(ascale*log(k1p/(kpivot*aiso))) );
-  sigma8_scaling=shape_factor*s8;//trial option. Put shape factor at the same level as s8**2
+   aiso=1./alpha_perpendicular*pow( 1+mu*mu*(1./(Fap*Fap)-1) ,0.5);
+   shape_factor=exp(  mBGV*log(k1p/(kpivot*aiso))+m2BGV/ascale*tanh(ascale*log(k1p/(kpivot*aiso))) );
+   sigma8_scaling=shape_factor*sigma8_scaling;//trial option. Put shape factor at the same level as s8**2
 if(N1>=N-shiftN || N1<0 || k1p<=0 || kinput<=0)
 {
 fval[0]=0;//integral returns 0 out of range of Theory

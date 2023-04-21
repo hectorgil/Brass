@@ -11,7 +11,7 @@ double Zeff(double k1, double k2, double k3, double knl, double *k_n, double *n,
 
 void do_Btheo_iso(double B_theo0[], int NeffB0, double *parameters1,double *k_Plin,double *Plin,int Nlin, double *k_Olin, double *Olin, int NOlin,double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k_1[], double k_2[], double k_3[], int Npoly, fftw_plan plan1, fftw_plan plan2, double kmin_data0 , double kmax_data0, int wiggle,char *spacing_theory, double Sigma_smooth,double knl,double *k_n,double *n, double s8,char *bispectrum_BQ);
 
-void do_Btheo_RSD(char *ptmodel, char *type_fog, char *type_bispectrummodel,double B_theo0[], int NeffB0,double *NoiseB, double *parameters1,double **Theory, int Nlin, double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k_1[], double k_2[], double k_3[], fftw_plan plan1, fftw_plan plan2, double kmin_data0 , double kmax_data0, char *spacing_theory,double knl,double *n, char *bispectrum_BQ);
+void do_Btheo_RSD(char *ptmodel, char *type_fog, char *type_bispectrummodel,double B_theo0[], int NeffB0,double *NoiseB, double *parameters1,double **Theory, int Nlin, double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k_1[], double k_2[], double k_3[], fftw_plan plan1, fftw_plan plan2, double kmin_data0 , double kmax_data0, char *spacing_theory,double knl,double *n, char *bispectrum_BQ, char *mask_matrix, double **MatrixFS_mask, int noise_option,double redshift_in);
 
 void integrals8(unsigned ndim, const double *x, void *fdata, unsigned fdim, double *fval);
 
@@ -57,3 +57,6 @@ double cG(double n, double k, double knl);
 
 double S_ker(double k1, double k2, double k3);
 
+double geo_factor(double z, double A, double ctheta_min, double ctheta_med, double ctheta_max);
+
+double interpol_f(double z, double **f,int i);

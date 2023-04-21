@@ -121,6 +121,7 @@ char path_to_data1_bis_rsd[2000];
 char path_to_data2_bis_rsd[2000];
 char path_to_mocks1_bis_rsd[2000];
 char path_to_mocks2_bis_rsd[2000];
+char diag_cov[200];
 char path_output[2000];
 char do_plot[10];
 char identifier[1000];
@@ -150,7 +151,7 @@ double *posAVSGC,*posSGC,*W0SGC,*W2SGC,*W4SGC,*W6SGC,*W8SGC;
 
 double *k11bao,*k22bao,*k33bao,*B0bao,*Bnoise_bao,*errB0bao;
 double *k11rsd,*k22rsd,*k33rsd,*B0rsd,*Bnoise_rsd,*errB0rsd;
-
+double redshift_in;
 
 double *k11baoSGC,*k22baoSGC,*k33baoSGC,*B0baoSGC,*Bnoise_baoSGC,*errB0baoSGC;
 double *k11rsdSGC,*k22rsdSGC,*k33rsdSGC,*B0rsdSGC,*Bnoise_rsdSGC,*errB0rsdSGC;
@@ -254,6 +255,8 @@ fscanf(f,"%*s %*s %*s %s\n",path_to_mocks1_rsd);
 fscanf(f,"%*s %*s %*s %s\n",path_to_mocks2_rsd);
 fscanf(f,"%*s %*s %*s %d\n",&Nrealizations);
 if(Nrealizations<0){printf("Error with number of realizations %d\n. Exiting now...\n",Nrealizations);exit(0);}
+fscanf(f,"%*s %*s %*s %*s %*s %*s %s\n",diag_cov);
+if(strcmp(diag_cov, "no") != 0 && strcmp(diag_cov, "yes") != 0){printf("Error with answer to diagonal covariance %s\n. Exiting now...\n",diag_cov);exit(0);}
 fscanf(f,"%*s %*s %*s %*s %*s %*s %*s %s\n",path_to_mask1);
 fscanf(f,"%*s %*s %*s %*s %*s %*s %*s %s\n",path_to_mask2);
 fscanf(f,"%*s %*s %*s %s\n",mask_renormalization);
@@ -324,8 +327,12 @@ fscanf(f,"%*s %*s %*s %*s %lf\n\n",&ffactor);
 if(ffactor<0){printf("Warning f-factor negative: %lf. Exiting  now...\n",ffactor);exit(0);}
 fscanf(f,"%*s %*s %*s %*s %*s %*s %*s %lf\n",&Sigma_smooth);
 if(Sigma_smooth<0){printf("Warning unpysical value for smoothing scale: %lf. Exiting  now...\n",Sigma_smooth);exit(0);}
+
+if( strcmp(type_of_analysis,"FS") != 0 && strcmp(type_of_analysis,"FSalphasrecon") != 0   ){
 if(Sigma_smooth==0){printf("Smoothing scale set to %lf (pre-recon analysis).\n",Sigma_smooth);}
 else{printf("Smoothing scale set to %lf Mpc/h (post-recon analysis)\n",Sigma_smooth);}
+}
+
 
 fscanf(f,"%*s\n");
 //Sigma0
@@ -503,16 +510,17 @@ g=fopen(path_to_Plin,"r");
 if(g==NULL){printf("File %s not found. Exiting now...\n",path_to_Plin);exit(0);}
 fclose(g);
 g=fopen(path_to_Olin,"r");
-if(g==NULL){printf("File %s not found. Exiting now...\n",path_to_Olin);exit(0);}
+if(g==NULL){printf("File %s not found. Exiting now...\n",path_to_Olin);exit(0);}else{olin_exists=1;}
 fclose(g);
 sprintf(type_of_analysis_BAO,"yes");
-}
-g=fopen(path_to_Olin,"r");
-if(g!=NULL){fclose(g);}
 
-if(strcmp(type_of_analysis, "BAOISO") == 0 || strcmp(type_of_analysis, "BAOANISO") == 0 || strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0 || bispectrum_needs==1){
-olin_exists=1;
 }
+//g=fopen(path_to_Olin,"r");
+//if(g!=NULL){fclose(g);}
+
+//if(strcmp(type_of_analysis, "BAOISO") == 0 || strcmp(type_of_analysis, "BAOANISO") == 0 || strcmp(type_of_analysis, "FSBAOISO") == 0 || strcmp(type_of_analysis, "FSBAOANISO") == 0 || bispectrum_needs==1){
+//olin_exists=1;
+//}
 
 if(strcmp(type_BAO_fit, "mcmc") != 0 && strcmp(type_BAO_fit, "analytic") != 0){printf("Error type BAO fit type %s\n. Exiting now...\n",type_BAO_fit);exit(0);}
 if(strcmp(fit_BAO, "P24") == 0 && strcmp(type_BAO_fit, "analytic") == 0 && strcmp(path_to_mask1, "none") != 0){printf("I'd like to recomend you to use the monopole signal if quadrupole is also used.");}
@@ -559,9 +567,17 @@ if(strcmp(type_of_analysis_FS, "yes") == 0 && strcmp(rsdmodel_ps, "Kaiser87") !=
 fscanf(f,"%*s %*s %*s %*s %s\n",fogmodel_ps);
 if(strcmp(type_of_analysis_FS, "yes") == 0 && strcmp(fogmodel_ps, "Exponential") != 0 &&  strcmp(fogmodel_ps, "Lorentzian") != 0 && strcmp(fogmodel_ps, "Exponential_avir") != 0){printf("Unvalid option for FoG model %s. Available options: 'Lorentzian', 'Exponential', 'Exponential_avir'. Exiting now...\n",fogmodel_ps);exit(0);}
 fscanf(f,"%*s %*s %*s %*s %*s %*s %s\n",ptmodel_bs);
-if(strcmp(type_of_analysis_FS, "yes") == 0 && strcmp(ptmodel_bs, "tree-level") != 0 &&  strcmp(ptmodel_bs, "1L-SPT") != 0 && strcmp(ptmodel_bs, "GilMarin14") != 0){printf("Unvalid option for FoG model %s. Available options: 'tree-level', '1L-SPT', 'GilMarin14'. Exiting now...\n",ptmodel_bs);exit(0);}
-if(strcmp(ptmodel_bs, "GilMarin14") == 0 && strcmp(do_bispectrum,"yes")==0 && strcmp(type_of_analysis_FS,"yes") == 0  ){bispectrum_needs=1;}
+if(strcmp(type_of_analysis_FS, "yes") == 0 && strcmp(ptmodel_bs, "tree-level") != 0 &&  strcmp(ptmodel_bs, "1L-SPT") != 0 && strcmp(ptmodel_bs, "GilMarin14") != 0 && strcmp(ptmodel_bs,"GEO23") != 0){printf("Unvalid option for Bispectrum model %s. Available options: 'tree-level', '1L-SPT', 'GilMarin14', 'GEO23'. Exiting now...\n",ptmodel_bs);exit(0);}
+
+if(strcmp(ptmodel_bs, "GilMarin14") == 0 && strcmp(do_bispectrum,"yes")==0 && strcmp(type_of_analysis_FS,"yes") == 0  ){
+bispectrum_needs=1;
+g=fopen(path_to_Olin,"r");
+if(g!=NULL){fclose(g);olin_exists=1;}
+}
+
 if( strcmp(ptmodel_bs, "1L-SPT") == 0){printf("Sorry, 1L-SPT not available for Bispectrum yet!. Exiting now...\n");exit(0);}
+fscanf(f,"%*s %*s %*s %*s %*s %lf\n",&redshift_in);
+if( strcmp(ptmodel_bs,"GEO23") == 0){if(redshift_in<0 || redshift_in>6){printf("Unusual value for the input redshift, z=%lf. Exiting now...\n",redshift_in);exit(0);}}
 fscanf(f,"%*s %*s %*s %*s %*s %s\n",local_b2s2);
 if(strcmp(type_of_analysis_FS, "yes") == 0 && strcmp(local_b2s2, "yes") != 0 && strcmp(local_b2s2, "no") != 0 && strcmp(local_b2s2, "off") != 0){printf("Error local lagrangian b2s2 bias has to be either off, yes or no: %s\n. Exiting now...\n",local_b2s2);exit(0);}
 fscanf(f,"%*s %*s %*s %*s %*s %s\n",local_b3nl);
@@ -858,9 +874,9 @@ if( strcmp(type_of_analysis_BAO ,"yes") == 0 && strcmp(type_of_analysis_FS ,"yes
 
 if( strcmp(type_of_analysis ,"FSalphasrecon") == 0){printf("Error, no file-covariance for alphasrec+FS type of analysis. Exiting now...\n");exit(0);}    //need to fix this
 
-if( strcmp(type_of_analysis_BAO ,"yes") == 0){ get_cov_from_file(path_to_mocks1_bao,path_to_mocks1_bis_bao,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction);Nrealizations_used_NGC=Nrealizations;}
+if( strcmp(type_of_analysis_BAO ,"yes") == 0){ get_cov_from_file(path_to_mocks1_bao,path_to_mocks1_bis_bao,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,diag_cov);Nrealizations_used_NGC=Nrealizations;}
 
-if( strcmp(type_of_analysis_FS ,"yes") == 0){ get_cov_from_file(path_to_mocks1_rsd,path_to_mocks1_bis_rsd,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction);Nrealizations_used_NGC=Nrealizations;}
+if( strcmp(type_of_analysis_FS ,"yes") == 0){ get_cov_from_file(path_to_mocks1_rsd,path_to_mocks1_bis_rsd,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,diag_cov);Nrealizations_used_NGC=Nrealizations;}
 
   }
   else {
@@ -869,7 +885,7 @@ if( strcmp(type_of_analysis_FS ,"yes") == 0){ get_cov_from_file(path_to_mocks1_r
 if( strcmp(type_of_analysis ,"FSalphasrecon") == 0 && strcmp(covarianceFSa_option,"varying") == 0 ){getBAOcov(paramsBAO,path_to_data1_bao);}//get BAOpostcov
 else{paramsBAO[0]=-1;paramsBAO[1]=-1;paramsBAO[2]=-1;}
 
-    Nrealizations_used_NGC=get_cov_from_mocks(path_to_mocks1_bao,path_to_mocks1_rsd,path_to_mocks1_bis_bao,path_to_mocks1_bis_rsd,covfile1,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO);
+    Nrealizations_used_NGC=get_cov_from_mocks(path_to_mocks1_bao,path_to_mocks1_rsd,path_to_mocks1_bis_bao,path_to_mocks1_bis_rsd,covfile1,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO,diag_cov);
   }
 }
 else{
@@ -880,7 +896,7 @@ else{
 if( strcmp(type_of_analysis ,"FSalphasrecon") == 0 && strcmp(covarianceFSa_option,"varying") == 0 ){getBAOcov(paramsBAO,path_to_data1_bao);}//get BAOpostcov
 else{paramsBAO[0]=-1;paramsBAO[1]=-1;paramsBAO[2]=-1;}
 
-  Nrealizations_used_NGC=get_cov_from_mocks(path_to_mocks1_bao,path_to_mocks1_rsd,path_to_mocks1_bis_bao,path_to_mocks1_bis_rsd,covfile1,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO);
+  Nrealizations_used_NGC=get_cov_from_mocks(path_to_mocks1_bao,path_to_mocks1_rsd,path_to_mocks1_bis_bao,path_to_mocks1_bis_rsd,covfile1,cov,Ncov,Nrealizations, NeffP0bao,NeffP0rsd, NeffP2bao,NeffP2rsd, NeffP4bao,NeffP4rsd, NeffB0bao,NeffB0rsd,errP0bao,errP0rsd,errP2bao,errP2rsd,errP4bao,errP4rsd,errB0bao,errB0rsd,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO,diag_cov);
  
 }
 
@@ -1049,9 +1065,9 @@ if( strcmp(type_of_analysis_BAO ,"yes") == 0 && strcmp(type_of_analysis_FS ,"yes
 
 if( strcmp(type_of_analysis ,"FSalphasrecon") == 0){printf("Error, no file-covariance for alphasrec+FS type of analysis. Exiting now...\n");exit(0);}    //need to fix this
 
-if( strcmp(type_of_analysis_BAO ,"yes") == 0){get_cov_from_file(path_to_mocks2_bao,path_to_mocks2_bis_bao,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction);Nrealizations_used_SGC=Nrealizations;}
+if( strcmp(type_of_analysis_BAO ,"yes") == 0){get_cov_from_file(path_to_mocks2_bao,path_to_mocks2_bis_bao,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,diag_cov);Nrealizations_used_SGC=Nrealizations;}
 
-if( strcmp(type_of_analysis_FS ,"yes") == 0){get_cov_from_file(path_to_mocks2_rsd,path_to_mocks2_bis_rsd,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction);Nrealizations_used_SGC=Nrealizations;}
+if( strcmp(type_of_analysis_FS ,"yes") == 0){get_cov_from_file(path_to_mocks2_rsd,path_to_mocks2_bis_rsd,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,do_power_spectrum, do_bispectrum,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,diag_cov);Nrealizations_used_SGC=Nrealizations;}
 
 
   }  
@@ -1061,7 +1077,7 @@ if( strcmp(type_of_analysis_FS ,"yes") == 0){get_cov_from_file(path_to_mocks2_rs
 if( strcmp(type_of_analysis ,"FSalphasrecon") == 0 && strcmp(covarianceFSa_option,"varying") == 0 ){getBAOcov(paramsBAO,path_to_data2_bao);}//get BAOpostcov
 else{paramsBAO[0]=-1;paramsBAO[1]=-1;paramsBAO[2]=-1;}
 
-    Nrealizations_used_SGC=get_cov_from_mocks(path_to_mocks2_bao,path_to_mocks2_rsd,path_to_mocks2_bis_bao,path_to_mocks2_bis_rsd,covfile2,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO);
+    Nrealizations_used_SGC=get_cov_from_mocks(path_to_mocks2_bao,path_to_mocks2_rsd,path_to_mocks2_bis_bao,path_to_mocks2_bis_rsd,covfile2,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO,diag_cov);
   }
 } 
 else{
@@ -1071,7 +1087,7 @@ else{
 if( strcmp(type_of_analysis ,"FSalphasrecon") == 0 && strcmp(covarianceFSa_option,"varying") == 0 ){getBAOcov(paramsBAO,path_to_data2_bao);}//get BAOpostcov
 else{paramsBAO[0]=-1;paramsBAO[1]=-1;paramsBAO[2]=-1;}
 
-  Nrealizations_used_SGC=get_cov_from_mocks(path_to_mocks2_bao,path_to_mocks2_rsd,path_to_mocks2_bis_bao,path_to_mocks2_bis_rsd,covfile2,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO);
+  Nrealizations_used_SGC=get_cov_from_mocks(path_to_mocks2_bao,path_to_mocks2_rsd,path_to_mocks2_bis_bao,path_to_mocks2_bis_rsd,covfile2,covSGC,Ncov,Nrealizations, NeffP0baoSGC,NeffP0rsdSGC, NeffP2baoSGC,NeffP2rsdSGC, NeffP4baoSGC,NeffP4rsdSGC, NeffB0baoSGC,NeffB0rsdSGC,errP0baoSGC,errP0rsdSGC,errP2baoSGC,errP2rsdSGC,errP4baoSGC,errP4rsdSGC,errB0baoSGC,errB0rsdSGC,kminP0bao,kminP0rsd,kmaxP0bao,kmaxP0rsd,kminP2bao,kminP2rsd,kmaxP2bao,kmaxP2rsd,kminP4bao,kminP4rsd,kmaxP4bao,kmaxP4rsd,kminB0bao,kminB0rsd,kmaxB0bao,kmaxB0rsd,type_of_analysis,fit_BAO,fit_RSD,do_power_spectrum, do_bispectrum,bispectrum_BQ,matrix_linear_compression,input_elements_data_vector,output_elements_data_vector,covariance_correction,covarianceFSa_option,paramsBAO,diag_cov);
 
 }
 
@@ -1455,7 +1471,7 @@ printf("done\n");
 
 if( strcmp(type_of_analysis_FS ,"yes") == 0 && strcmp(type_of_analysis_BAO ,"no") == 0){
 
- do_rsd_mcmc(nthreads,type_of_analysis,fit_RSD,Theory,Ntheory,k_Plin,Plin,N_Plin,k_Olin, Olin, N_Olin, pos, W0, W2, W4,W6, W8,Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC, W6SGC, W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC,  k0rsd, P0rsd, errP0rsd,Pnoise_rsd, NeffP0rsd, k2rsd, P2rsd, errP2rsd, NeffP2rsd, k4rsd, P4rsd, errP4rsd, NeffP4rsd, k11rsd, k22rsd, k33rsd, B0rsd, errB0rsd, Bnoise_rsd, NeffB0rsd, k0rsdSGC, P0rsdSGC, errP0rsdSGC,Pnoise_rsdSGC,NeffP0rsdSGC, k2rsdSGC, P2rsdSGC, errP2rsdSGC,NeffP2rsdSGC, k4rsdSGC, P4rsdSGC, errP4rsdSGC,NeffP4rsdSGC, k11rsdSGC, k22rsdSGC, k33rsdSGC,B0rsdSGC,errB0rsdSGC, Bnoise_rsdSGC,NeffB0rsdSGC, cov, covSGC, alpha_min, alpha_max,ptmodel_ps,rsdmodel_ps,fogmodel_ps,ptmodel_bs,local_b2s2,local_b3nl,RSD_fit,sigma8_free,fog_free,fog_bs ,Nchunks, path_output, identifier, do_plot, use_prop_cov, path_to_cov, Nsteps, do_power_spectrum, do_bispectrum,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,type_of_analysis_BAO,type_of_analysis_FS,bispectrum_BQ, factor_for_sampling, mask_matrix,MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type,FSprior_mean,FSprior_stddev,noise_option,step_size,covariance_correction, Nrealizations_used_NGC,Nrealizations_used_SGC,P0bao,P0baoSGC );
+ do_rsd_mcmc(nthreads,type_of_analysis,fit_RSD,Theory,Ntheory,k_Plin,Plin,N_Plin,k_Olin, Olin, N_Olin, pos, W0, W2, W4,W6, W8,Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC, W2SGC, W4SGC, W6SGC, W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC,  k0rsd, P0rsd, errP0rsd,Pnoise_rsd, NeffP0rsd, k2rsd, P2rsd, errP2rsd, NeffP2rsd, k4rsd, P4rsd, errP4rsd, NeffP4rsd, k11rsd, k22rsd, k33rsd, B0rsd, errB0rsd, Bnoise_rsd, NeffB0rsd, k0rsdSGC, P0rsdSGC, errP0rsdSGC,Pnoise_rsdSGC,NeffP0rsdSGC, k2rsdSGC, P2rsdSGC, errP2rsdSGC,NeffP2rsdSGC, k4rsdSGC, P4rsdSGC, errP4rsdSGC,NeffP4rsdSGC, k11rsdSGC, k22rsdSGC, k33rsdSGC,B0rsdSGC,errB0rsdSGC, Bnoise_rsdSGC,NeffB0rsdSGC, cov, covSGC, alpha_min, alpha_max,ptmodel_ps,rsdmodel_ps,fogmodel_ps,ptmodel_bs,local_b2s2,local_b3nl,RSD_fit,sigma8_free,fog_free,fog_bs ,Nchunks, path_output, identifier, do_plot, use_prop_cov, path_to_cov, Nsteps, do_power_spectrum, do_bispectrum,redshift_in,spacing_dataNGC_rsd,spacing_dataSGC_rsd,spacing_theory_rsd,type_of_analysis_BAO,type_of_analysis_FS,bispectrum_BQ, factor_for_sampling, mask_matrix,MatrixFS_mask_NGC, MatrixFS_mask_SGC,FSprior_type,FSprior_mean,FSprior_stddev,noise_option,step_size,covariance_correction, Nrealizations_used_NGC,Nrealizations_used_SGC,P0bao,P0baoSGC );
 
 }
 

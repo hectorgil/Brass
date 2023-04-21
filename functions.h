@@ -98,3 +98,5 @@ int  get_Neffmax(char *spacing_data, int modeP0, int modeP2, int modeP4, int Nef
 double get_ktheo(char *spacing_data,int j_k,double kmin,double kmax,int NeffP_max,int factor_for_sampling, double *k_theory, double **Theory);
 
 void apply_mask_matrix( double *P_theo0, double *P_theo2,double *P_theo4,double **Matrix_mask, double *vector_in, int Nin, int Nout, int modeP0, int modeP2, int modeP4, int NeffP0, int NeffP2, int NeffP4, char *type_of_analysis);
+
+void order(double ctheta12,double ctheta13,double ctheta23,double params[]);

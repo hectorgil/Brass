@@ -108,5 +108,5 @@ i#For BAO anaylytical fit
 
 #Read out parameters
 #Path to output: //path of the output (need writting permisions)
-#Identifier of output: //unique identifier for your output files
+#Identifier of output: //unique identifier for your output files. The string . is not allow and should NEVER be used as part of the identifier
 #Plot best-fit (yes/no): //if file with best-fitting file is to be printed

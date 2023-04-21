@@ -33,7 +33,11 @@ int noise_option;
 double knl;
 double *k_n,*n;
 double k1input,k2input,k3input;
-
+char *spacing;
+double *Preal,*kreal;
+int Nreal;
+char *mask;
+double redshift_in;
 //FOR BAO
 int Nlin,NOlin;
 double *parameters1;
@@ -43,7 +47,6 @@ double *k_Plin,*Plin,*k_Olin,*Olin;
 
 int Npoly,modeP0,modeP2,modeP4;
 
-char *spacing;
 
 }f_params;
 

@@ -235,14 +235,20 @@ double Z;
 return Z;
 }
 
-void do_Btheo_RSD(char *ptmodel, char *type_fog, char *type_bispectrummodel,double B_theo0[], int NeffB0,double *NoiseB, double *parameters1,double **Theory, int Nlin, double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k_1[], double k_2[], double k_3[], fftw_plan plan1, fftw_plan plan2, double kmin_data0 , double kmax_data0, char *spacing_theory,double knl,double *n, char *bispectrum_BQ)
+void do_Btheo_RSD(char *ptmodel, char *type_fog, char *type_bispectrummodel,double B_theo0[], int NeffB0,double *NoiseB, double *parameters1,double **Theory, int Nlin, double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k_1[], double k_2[], double k_3[], fftw_plan plan1, fftw_plan plan2, double kmin_data0 , double kmax_data0, char *spacing_theory,double knl,double *n, char *bispectrum_BQ, char *mask_matrix, double **MatrixFS_mask, int noise_option, double redshift_in)//no mask-matrix yet in the bispectrum
 {
 
  f_params *function_parameters;
- function_parameters = (f_params *) malloc(sizeof(f_params));
+ f_params *function_parameters_real;
+
+  function_parameters = (f_params *) malloc(sizeof(f_params));
+  function_parameters_real = (f_params *) malloc(sizeof(f_params));
+char ptmodel_linear[200];sprintf(ptmodel_linear,"linear");
 double B12,B13,B23,junk;
 double XMIN2[2]={-1,0};
 double XMAX2[2]={+1,2.*Pi};
+double XMIN1[1]={-1};
+double XMAX1[1]={+1};
 double precision=1e-1;
 int i;
 double *Preal_nomask,*kreal_nomask;
@@ -251,7 +257,7 @@ double P1,P2,P3;
 char type_of_analysis[2000];
 
 double b1,b2,Anoise,sigma8_scaling,sigma8,f,mBGV,m2BGV;
-double bs2,sigmaB,apara,aperp,avir;
+double b3nl,sigmaP,bs2,sigmaB,apara,aperp,avir;
 
 int interpolation_order,shiftN;
 double w1_k1,w2_k1,w0_k1;
@@ -277,15 +283,19 @@ b1=parameters1[6];
 b2=parameters1[7];
 Anoise=parameters1[8];
 bs2=parameters1[9];//-4./7.*(b1-1)
-//b3nl=parameters1[10];
-//sigmaP=parameters1[11];
+b3nl=parameters1[10];//needed for Q
+sigmaP=parameters1[11];//needed for Q
 sigmaB=parameters1[12];//for B this is placed always here
 avir=parameters1[13];
 
 
 //printf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", apara,aperp,f,sigma8,sigma8_scaling,b1,b2,Anoise,bs2,sigmaB);
-
+(*function_parameters).redshift_in=redshift_in;
 (*function_parameters).type_ptmodel=ptmodel;
+
+if( strcmp(type_bispectrummodel,"tree-level") == 0){(*function_parameters_real).type_ptmodel=ptmodel_linear;}
+else{(*function_parameters_real).type_ptmodel=ptmodel;} //if tree-level, input real
+
 (*function_parameters).type_fog=type_fog;
 (*function_parameters).type_bispectrummodel=type_bispectrummodel;
 (*function_parameters).knl=knl;//either fiducial (if s8 fixed), or the interpolated one
@@ -295,19 +305,29 @@ avir=parameters1[13];
 (*function_parameters).b2=b2;
 (*function_parameters).A=Anoise;
 (*function_parameters).bs2=bs2;
+(*function_parameters).b3nl=b3nl;
 (*function_parameters).sigma8_value=sigma8;
 (*function_parameters).sigma8=sigma8_scaling;
+(*function_parameters_real).sigma8=sigma8_scaling;
 
 (*function_parameters).sigmaB=sigmaB;
+(*function_parameters).sigmaP=sigmaP;
 (*function_parameters).avir=avir;
 (*function_parameters).f=f;
 (*function_parameters).m2BGV=m2BGV;
+(*function_parameters_real).m2BGV=m2BGV;
 (*function_parameters).mBGV=mBGV;
+(*function_parameters_real).mBGV=mBGV;
 (*function_parameters).a_parallel=apara;
 (*function_parameters).a_perpendicular=aperp;
 (*function_parameters).theory=Theory;
+(*function_parameters_real).theory=Theory;
 (*function_parameters).N=Nlin;
+(*function_parameters_real).N=Nlin;
 (*function_parameters).spacing=spacing_theory;
+(*function_parameters_real).spacing=spacing_theory;
+(*function_parameters).noise_option=noise_option;
+
 
 if( strcmp(path_to_mask1,"none") ==0){N_nomask=1;}
 else{N_nomask=Nlin;}
@@ -321,140 +341,29 @@ else{N_nomask=Nlin;}
       {
          kreal_nomask[i]=Theory[i][0];
       }
-      Preal(kreal_nomask,Preal_nomask,N_nomask, function_parameters);
 
+//apply first window, then distort AP (approximation, but much faster)
+(*function_parameters_real).a_parallel=1;
+(*function_parameters_real).a_perpendicular=1;
+
+      Preal(kreal_nomask,Preal_nomask,N_nomask, function_parameters_real);
+
+     
       //apply mask here
      sprintf(type_of_analysis,"BAOISO");//we apply the mask as if it were an isotropic bao, i.e. only through W0, ignoring W2,...
      apply_mask(type_of_analysis,1, 0, 0, kreal_nomask,Preal_nomask, NULL, NULL,N_nomask, pos, W0, W2, W4, W6, W8, Nmask,spacing_mask, plan1, plan2, kreal_nomask[0], kreal_nomask[N_nomask-1], kmin_data0, kmax_data0, kmin_data0, kmax_data0, kmin_data0, kmax_data0,spacing_theory,0,1);
 
-   }
+//pass the real P(k) without apara, aperp distortions (but with m(apara=1, aperp=1) distortion)
+(*function_parameters).Nreal=N_nomask;
+(*function_parameters).kreal=kreal_nomask;
+(*function_parameters).Preal=Preal_nomask;
+
+}//if mask=none do nothing, just tell integral_B that mask is none
+
+(*function_parameters).mask=path_to_mask1;
 
    for(i=0;i<NeffB0;i++)
    {
-      if( strcmp(path_to_mask1,"none") ==0){//nomask
-     
-     kreal_nomask[0]=k_1[i];
-     Preal(kreal_nomask,Preal_nomask,N_nomask, function_parameters);
-     P1=Preal_nomask[0];
- 
-     kreal_nomask[0]=k_2[i];    
-     Preal(kreal_nomask,Preal_nomask,N_nomask, function_parameters);
-     P2=Preal_nomask[0];
-     
-     kreal_nomask[0]=k_3[i];
-     Preal(kreal_nomask,Preal_nomask,N_nomask, function_parameters);
-     P3=Preal_nomask[0];
-
-    }
-    else{//mask
-
-    //temporary. Use interpolate fast as is done in chi2_rsd_mcmc
-    //P1=P_interpol(k_1[i],kreal_nomask,Preal_nomask,N_nomask);
-    //P2=P_interpol(k_2[i],kreal_nomask,Preal_nomask,N_nomask);
-    //P3=P_interpol(k_3[i],kreal_nomask,Preal_nomask,N_nomask);
-    
-if(i==0){
-     Ninterpol1=determine_N_singlearray(kreal_nomask,k_1[i],N_nomask,spacing_data);
-     Ninterpol2=determine_N_singlearray(kreal_nomask,k_2[i],N_nomask,spacing_data);
-     Ninterpol3=determine_N_singlearray(kreal_nomask,k_3[i],N_nomask,spacing_data);
-
-}
-else{
-//update this if it's different from previous triangle. Otherwise keep the same
-if(k_1[i]!=k_1[i-1]){Ninterpol1=determine_N_singlearray(kreal_nomask,k_1[i],N_nomask,spacing_data);}
-if(k_2[i]!=k_2[i-1]){Ninterpol2=determine_N_singlearray(kreal_nomask,k_2[i],N_nomask,spacing_data);}
-if(k_3[i]!=k_3[i-1]){Ninterpol3=determine_N_singlearray(kreal_nomask,k_3[i],N_nomask,spacing_data);}
-
-}
-
-if(Ninterpol1>=N_nomask-shiftN || Ninterpol1<0  || k_1[i]<=0 || Ninterpol2>=N_nomask-shiftN || Ninterpol2<0  || k_2[i]<=0 || Ninterpol3>=N_nomask-shiftN || Ninterpol3<0  || k_3[i]<=0)
-{
-P1=0;
-P2=0;
-P3=0;
-}
-else
-{
-
-    if(i==0){
-       if(interpolation_order==1)
-       {
-             w1_k1=determine_w1_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-             w1_k2=determine_w1_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-             w1_k3=determine_w1_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-       }
-       if(interpolation_order==2)
-       {
-            w0_k1=determine_w0_2ndorder_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-            w1_k1=determine_w1_2ndorder_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-            w2_k1=determine_w2_2ndorder_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-
-            w0_k2=determine_w0_2ndorder_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-            w1_k2=determine_w1_2ndorder_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-            w2_k2=determine_w2_2ndorder_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-
-            w0_k3=determine_w0_2ndorder_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-            w1_k3=determine_w1_2ndorder_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-            w2_k3=determine_w2_2ndorder_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-       }
-
-       P1=P_interpol_fast(k_1[i],Preal_nomask,N_nomask,spacing_data,interpolation_order,Ninterpol1,w0_k1,w1_k1,w2_k1);
-       P2=P_interpol_fast(k_2[i],Preal_nomask,N_nomask,spacing_data,interpolation_order,Ninterpol2,w0_k2,w1_k2,w2_k2);
-       P3=P_interpol_fast(k_3[i],Preal_nomask,N_nomask,spacing_data,interpolation_order,Ninterpol3,w0_k3,w1_k3,w2_k3);
-  }
-else{
-
-  if(k_1[i]!=k_1[i-1]){
-       if(interpolation_order==1)
-       {
-             w1_k1=determine_w1_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-       }
-       if(interpolation_order==2)
-       {
-            w0_k1=determine_w0_2ndorder_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-            w1_k1=determine_w1_2ndorder_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-            w2_k1=determine_w2_2ndorder_singlearray(kreal_nomask,k_1[i],Ninterpol1,spacing_data);
-       }
-         P1=P_interpol_fast(k_1[i],Preal_nomask,N_nomask,spacing_data,interpolation_order,Ninterpol1,w0_k1,w1_k1,w2_k1);
-  }
-
-  if(k_2[i]!=k_2[i-1]){
-       if(interpolation_order==1)
-       {
-             w1_k2=determine_w1_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-       }
-       if(interpolation_order==2)
-       {
-            w0_k2=determine_w0_2ndorder_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-            w1_k2=determine_w1_2ndorder_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-            w2_k2=determine_w2_2ndorder_singlearray(kreal_nomask,k_2[i],Ninterpol2,spacing_data);
-       }
-         P2=P_interpol_fast(k_2[i],Preal_nomask,N_nomask,spacing_data,interpolation_order,Ninterpol2,w0_k2,w1_k2,w2_k2);
-  }
-
-  if(k_3[i]!=k_3[i-1]){
-       if(interpolation_order==1)
-       {
-             w1_k3=determine_w1_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-       }
-       if(interpolation_order==2)
-       {
-            w0_k3=determine_w0_2ndorder_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-            w1_k3=determine_w1_2ndorder_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-            w2_k3=determine_w2_2ndorder_singlearray(kreal_nomask,k_3[i],Ninterpol3,spacing_data);
-       }
-       P3=P_interpol_fast(k_3[i],Preal_nomask,N_nomask,spacing_data,interpolation_order,Ninterpol3,w0_k3,w1_k3,w2_k3);
-  }
-
-}
-
-
-}
-
-
-
-   }
-
           (*function_parameters).k1input=k_1[i];
           (*function_parameters).k2input=k_2[i];
           (*function_parameters).k3input=k_3[i];
@@ -470,22 +379,105 @@ else{
           (*function_parameters).k3input=k_1[i];
           adapt_integrate(1,integralB,function_parameters,2,XMIN2,XMAX2,0,precision,precision,&B23,&junk);
 
-if( strcmp(bispectrum_BQ,"B") == 0){
-B_theo0[i]=(2.*(P1*P2*B12+P1*P3*B13+P2*P3*B23)+Anoise*NoiseB[i])*pow(apara,-2)*pow(aperp,-4);
+//if( strcmp(bispectrum_BQ,"B") == 0){
+B_theo0[i]=(2.*(B12+B13+B23)+Anoise*NoiseB[i])*pow(apara,-2)*pow(aperp,-4);
+
+if( strcmp(bispectrum_BQ,"Q") == 0 && N_nomask==1){//reduced bispectrum and without mask
+
+      (*function_parameters).mode=0;//compute the monopole
+
+         (*function_parameters).kinput=k_1[i];
+         adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P1,&junk);
+
+         (*function_parameters).kinput=k_2[i];
+         adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P2,&junk);
+
+         (*function_parameters).kinput=k_3[i];
+         adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P3,&junk);
+
+         B_theo0[i]=B_theo0[i]/(P1*P2+P1*P3+P2*P3);
+
 }
+
+
+
+//}
+
+/*
 if( strcmp(bispectrum_BQ,"Q") == 0){
-B_theo0[i]=2.*(P1*P2*B12+P1*P3*B13+P2*P3*B23)/(P1*P2+P1*P3+P2*P3)+Anoise*NoiseB[i];//note that the volume element (apara*aperp^2)^2 cancells out in Q!
-}
+//B_theo0[i]=2.*(P1*P2*B12+P1*P3*B13+P2*P3*B23)/(P1*P2+P1*P3+P2*P3)+Anoise*NoiseB[i];//note that the volume element (apara*aperp^2)^2 cancells out in Q!
+
+// k, mu integration of Preal 
+//
+// //mode == 0 (monopole)
+P1=0;
+            adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P1,&junk);
+P2=0;
+            adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P1,&junk);
+P3=0;
+            adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P1,&junk);
+
+//apply window to P's as iso-only for simplicity
+
+
+
+B_theo0[i]=2.*(B12+B13+B23)/(P1*P2+P1*P3+P2*P3)+Anoise*NoiseB[i];//note that the volume element (apara*aperp^2)^2 cancells out in Q!
+
+}*/
 
 //B_theo0[i]=P2+Anoise*NoiseB[i];
 
 ///B_theo0[i]=(2.*(P1*P2*B12+P1*P3*B13+P2*P3*B23))*pow(apara,-2)*pow(aperp,-4);
 //printf("%lf %lf %lf %lf (%lf,%lf,%lf) (%lf,%lf,%lf) (%lf,%lf,%lf)\n",k_1[i],k_2[i],k_3[i],B_theo0[i],P1,P2,B12,P1,P3,B13,P2,P3,B23);
 
-}
+}//loop over triangles
+
+
 
 free(kreal_nomask);
 free(Preal_nomask);
+
+if( strcmp(bispectrum_BQ,"Q") == 0 && N_nomask>1){//only Q with mask
+
+                N_nomask=Nlin;
+                kreal_nomask = (double*) calloc(N_nomask, sizeof(double));
+                Preal_nomask = (double*) calloc(N_nomask, sizeof(double));
+
+      (*function_parameters).mode=0;//compute the monopole
+      for(i=0;i<N_nomask;i++)
+      {
+         kreal_nomask[i]=Theory[i][0];
+         (*function_parameters).kinput=kreal_nomask[i];
+         adapt_integrate(1,integralP,function_parameters,1,XMIN1,XMAX1,0,precision,precision,&P1,&junk);
+         Preal_nomask[i]=P1;
+      }
+
+     sprintf(type_of_analysis,"BAOISO");//we apply the mask as if it were an isotropic bao, i.e. only through W0, ignoring W2,...
+     apply_mask(type_of_analysis,1, 0, 0, kreal_nomask,Preal_nomask, NULL, NULL,N_nomask, pos, W0, W2, W4, W6, W8, Nmask,spacing_mask, plan1, plan2, kreal_nomask[0], kreal_nomask[N_nomask-1], kmin_data0, kmax_data0, kmin_data0, kmax_data0, kmin_data0, kmax_data0,spacing_theory,0,1);
+     
+       for(i=0;i<NeffB0;i++)
+       {
+          if(i==0){
+          P1=P_interpolLOG(k_1[i],kreal_nomask,Preal_nomask,N_nomask);
+          P2=P_interpolLOG(k_2[i],kreal_nomask,Preal_nomask,N_nomask);
+          P3=P_interpolLOG(k_3[i],kreal_nomask,Preal_nomask,N_nomask);
+          }
+          else
+          {   //this is useful if they are ordered, but if they are not it's not a problem, it just does nothing
+              if( k_1[i]!=k_1[i-1]){P1=P_interpolLOG(k_1[i],kreal_nomask,Preal_nomask,N_nomask);}
+              if( k_2[i]!=k_2[i-1]){P2=P_interpolLOG(k_2[i],kreal_nomask,Preal_nomask,N_nomask);}
+              if( k_3[i]!=k_3[i-1]){P3=P_interpolLOG(k_3[i],kreal_nomask,Preal_nomask,N_nomask);}
+          }
+
+         B_theo0[i]=B_theo0[i]/(P1*P2+P1*P3+P2*P3);
+
+       }
+     
+free(kreal_nomask);
+free(Preal_nomask);
+}
+
+
 }
 
 void do_Btheo_iso(double B_theo0[], int NeffB0, double *parameters1,double *k_Plin,double *Plin,int Nlin, double *k_Olin, double *Olin, int NOlin,double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *spacing_mask, char *path_to_mask1, double k_1[], double k_2[], double k_3[], int Npoly, fftw_plan plan1, fftw_plan plan2, double kmin_data0 , double kmax_data0, int wiggle,char *spacing_theory, double Sigma_smooth,double knl,double *k_n,double *n, double s8, char *bispectrum_BQ)
@@ -934,4 +926,62 @@ free(k_n_func_smooth_eff);
 free(n_func_smooth);
 }
 
+double interpol_f(double z, double **f,int i)
+{
+double g,a,a05,a1,a2;
+a=1./(1+z);
+a05=1./1.5;
+a1=1./2.;
+a2=1./3.;
+
+//2nd order Lagrange interpolation formula
+////http://www-classes.usc.edu/engr/ce/108/lagrange.pdf
+g=f[i][0]+(a-a05)*( f[i][0]-f[i][1])/(a05-a1)+(a-a05)*(a-a1)/(a05-a2)*( (f[i][0]-f[i][1])/(a05-a1) - (f[i][1] - f[i][2])/(a1-a2) );
+
+return g;
+}
+
+double geo_factor(double z, double A, double ctheta_min, double ctheta_med, double ctheta_max)
+{
+double geo;
+
+int i;
+double **f;//f[5][3];
+double Anorm=0.001;// in (h/Mpc)^2
+ f = (double **) calloc(5, sizeof(double*));
+ for(i=0;i<5;i++){f[i]= (double *) calloc(3, sizeof(double));}
+
+double feff[5];
+//redshift 0.5
+f[0][0]=1.0033;
+f[1][0]=-0.0040;
+f[2][0]=0.0240;
+f[3][0]=-0.0568;
+f[4][0]=0.01325;
+
+//redshift 1.0
+f[0][1]=1.0180;
+f[1][1]=-0.0041;
+f[2][1]=0.0149;
+f[3][1]=-0.0547;
+f[4][1]=0.011144;
+
+//redshift 2.0
+f[0][2]=1.037;
+f[1][2]=0.0020;
+f[2][2]=0.0056;
+f[3][2]=-0.048;
+f[4][2]=0.0081;
+
+//interpol
+for(i=0;i<5;i++)
+{
+feff[i]=interpol_f(z,f,i);
+}
+
+geo=feff[0]+feff[1]*ctheta_med/ctheta_max+feff[2]*ctheta_min/ctheta_max+feff[3]*A/Anorm+feff[4]*A*A/(Anorm*Anorm);
+
+freeTokens(f, 5);
+return geo;
+}
 
