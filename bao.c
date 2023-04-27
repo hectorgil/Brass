@@ -250,9 +250,9 @@ W8_int=P_interpol( R[i] , pos, W8, Nmask);
 
 if(modeP0==1 && modeP2==1 && modeP4==1)//cas 111
 {
-Xi_mono_mask[i]=W0_int*Xi_mono[i]+1./5.*W2_int*Xi_quadru[i]+1./9.*W4_int*Xi_hexadeca[i];
-Xi_quadru_mask[i]=W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)+Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
-Xi_hexadeca_mask[i]=W4_int*Xi_mono[i]+Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
+Xi_mono_mask[i]=W0_int*Xi_mono[i]-1./5.*W2_int*Xi_quadru[i]+1./9.*W4_int*Xi_hexadeca[i];
+Xi_quadru_mask[i]=-W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)-Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
+Xi_hexadeca_mask[i]=W4_int*Xi_mono[i]-Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
 }
 
 if(modeP0==1 && modeP2==0 && modeP4==0)//100
@@ -272,8 +272,8 @@ Xi_hexadeca_mask[i]=Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./
 
 if(modeP0==1 && modeP2==1 && modeP4==0)//110
 {
-Xi_mono_mask[i]=W0_int*Xi_mono[i]+1./5.*W2_int*Xi_quadru[i];
-Xi_quadru_mask[i]=W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int);
+Xi_mono_mask[i]=W0_int*Xi_mono[i]-1./5.*W2_int*Xi_quadru[i];
+Xi_quadru_mask[i]=-W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int);
 }
 
 if(modeP0==1 && modeP2==0 && modeP4==1)//101
@@ -284,8 +284,8 @@ Xi_hexadeca_mask[i]=W4_int*Xi_mono[i]+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162.
 
 if(modeP0==0 && modeP2==1 && modeP4==1)//011
 {
-Xi_quadru_mask[i]=Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)+Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
-Xi_hexadeca_mask[i]=Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
+Xi_quadru_mask[i]=Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)-Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
+Xi_hexadeca_mask[i]=-Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
 }
 
 
