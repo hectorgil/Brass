@@ -250,9 +250,9 @@ W8_int=P_interpol( R[i] , pos, W8, Nmask);
 
 if(modeP0==1 && modeP2==1 && modeP4==1)//cas 111
 {
-Xi_mono_mask[i]=W0_int*Xi_mono[i]-1./5.*W2_int*Xi_quadru[i]+1./9.*W4_int*Xi_hexadeca[i];
-Xi_quadru_mask[i]=-W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)-Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
-Xi_hexadeca_mask[i]=W4_int*Xi_mono[i]-Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
+Xi_mono_mask[i]=W0_int*Xi_mono[i]+1./5.*W2_int*Xi_quadru[i]+1./9.*W4_int*Xi_hexadeca[i];
+Xi_quadru_mask[i]=W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)+Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
+Xi_hexadeca_mask[i]=W4_int*Xi_mono[i]+Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
 }
 
 if(modeP0==1 && modeP2==0 && modeP4==0)//100
@@ -272,8 +272,8 @@ Xi_hexadeca_mask[i]=Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./
 
 if(modeP0==1 && modeP2==1 && modeP4==0)//110
 {
-Xi_mono_mask[i]=W0_int*Xi_mono[i]-1./5.*W2_int*Xi_quadru[i];
-Xi_quadru_mask[i]=-W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int);
+Xi_mono_mask[i]=W0_int*Xi_mono[i]+1./5.*W2_int*Xi_quadru[i];
+Xi_quadru_mask[i]=W2_int*Xi_mono[i]+Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int);
 }
 
 if(modeP0==1 && modeP2==0 && modeP4==1)//101
@@ -284,8 +284,8 @@ Xi_hexadeca_mask[i]=W4_int*Xi_mono[i]+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162.
 
 if(modeP0==0 && modeP2==1 && modeP4==1)//011
 {
-Xi_quadru_mask[i]=Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)-Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
-Xi_hexadeca_mask[i]=-Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
+Xi_quadru_mask[i]=Xi_quadru[i]*(W0_int+2./7.*W2_int+2./7.*W4_int)+Xi_hexadeca[i]*(2./7.*W2_int+100./693.*W4_int+25./143.*W6_int);
+Xi_hexadeca_mask[i]=Xi_quadru[i]*(18./35.*W2_int+20./77.*W4_int+45./143.*W6_int)+Xi_hexadeca[i]*(W0_int+20./77.*W2_int+162./1001.*W4_int+20./143.*W6_int+490./2431.*W8_int);
 }
 
 
@@ -471,21 +471,23 @@ if(strcmp(fit_BAO, "P0") == 0 || strcmp(fit_BAO, "P02") == 0 || strcmp(fit_BAO, 
 if(strcmp(fit_BAO, "P2") == 0 || strcmp(fit_BAO, "P02") == 0 || strcmp(fit_BAO, "P24") == 0 || strcmp(fit_BAO, "P024") == 0){modeP2=1;}
 if(strcmp(fit_BAO, "P4") == 0 || strcmp(fit_BAO, "P04") == 0 || strcmp(fit_BAO, "P24") == 0 || strcmp(fit_BAO, "P024") == 0){modeP4=1;}
 
-Nlines=countlinesLI(likelihood_file)-2;
+//Nlines=countlinesLI(likelihood_file)-2;//old countlines wo the skipheader function by sam. 
+Nlines=countlinesLI(likelihood_file);
 
 alpha1=  (double*) calloc( Nlines, sizeof(double));
 if(modeP0+modeP2+modeP4>1){
 alpha2= (double*) calloc( Nlines, sizeof(double));
 
 Nlines1=(long int)(sqrt(Nlines*1.));
+//printf("%d %d %d %d %d\n",modeP0,modeP2,modeP4, Nlines,Nlines1);
 alpha11= (double*) calloc( Nlines1, sizeof(double));
 alpha22= (double*) calloc( Nlines1, sizeof(double));
 chi2_value11= (double*) calloc( Nlines1, sizeof(double));
 chi2_value22= (double*) calloc( Nlines1, sizeof(double));
 
-
 }
 chi2_value= (double*) calloc( Nlines, sizeof(double));
+
 
 junk=(Npolynomial+1)*Nchunks*(modeP0+modeP2+modeP4)+Nalphas+Nsigmas+1;
 //if(modeP0+modeP2+modeP4>1){junk++;}
@@ -510,6 +512,7 @@ if(modeP0+modeP2+modeP4==1){fscanf(f,"%lf %lf\n",&alpha1[i],&chi2_value[i]);}
 
 if(i==0){chi2min=chi2_value[i];imin=i;}
 else{if(chi2min>chi2_value[i]){chi2min=chi2_value[i];imin=i;}}
+//printf("%lf %lf %lf\n",alpha1[i],alpha2[i],chi2_value[i]);
 
 if(modeP0+modeP2+modeP4>1)
 {
@@ -518,7 +521,7 @@ if(modeP0+modeP2+modeP4>1)
    else{
 
          if(alpha1[i]==alpha11[l1] && chi2_value11[l1]>chi2_value[i]){chi2_value11[l1]=chi2_value[i];}
-         if(alpha1[i]>alpha11[l1]){alpha11[l1+1]=alpha1[i];chi2_value11[l1+1]=chi2_value[i];l1++;}
+         if(alpha1[i]>alpha11[l1]){alpha11[l1+1]=alpha1[i];chi2_value11[l1+1]=chi2_value[i];l1++; }
        }
 
          if(i<Nlines1)
@@ -543,7 +546,6 @@ if(modeP0+modeP2+modeP4>1)
 
 
 fclose(f);
-
 
 if(modeP0+modeP2+modeP4==1){
 
@@ -685,6 +687,7 @@ free(chi2_value11);
 free(chi2_value22);
 }
 free(chi2_value);
+
 }
 
 double hi0_mask(int index,int mode,int modeP0,int modeP2,int modeP4, double ki, double alpha_0,double alpha_00, double Sigma_nl,int mode_parameter, double *pos, double *W0,double *W2,double *W4,double *W6,double *W8, int Nmask, char *path_to_mask, double *klin, double *Plin, int Nlin, double *kolin, double *Polin, int Nolin,fftw_plan plan1, fftw_plan plan2,double kmin,double kmax,double kmin_data,double kmax_data)
@@ -2928,7 +2931,8 @@ if(NeffP0*modeP0>0){k_theo0 = (double*) calloc( NeffP0, sizeof(double));}
 if(NeffP2*modeP2>0){k_theo2 = (double*) calloc( NeffP2, sizeof(double));}
 if(NeffP4*modeP4>0){k_theo4 = (double*) calloc( NeffP4, sizeof(double));}
 }
-
+//printf("%s \n",mask_matrix);
+//exit(0);
 if(strcmp(mask_matrix,"yes") == 0 )
 {
 Neffmax=get_Neffmax(spacing_dataNGC, modeP0, modeP2, modeP4, NeffP0, NeffP2, NeffP4, k0[0], k0[NeffP0-1], k2[0], k2[NeffP2-1], k4[0], k4[NeffP4-1], Ntheo );
@@ -3011,7 +3015,7 @@ if(modeP4==1){P_theo4 = (double*) calloc( Neffmax*factor_sampling_mask, sizeof(d
 
 difference = (double*) calloc( Ncov, sizeof(double));
 
-
+//exit(0);
 if( strcmp(type_of_analysis, "BAOISO") == 0 ){
 
 if(strcmp(do_power_spectrum,"yes") ==0){
@@ -4074,6 +4078,7 @@ return ch2;
 
 void do_bao_analytic(char *type_BAO_fit,char *type_of_analysis,char *fit_BAO,double *k_Plin, double *Plin, int Nlin, double *k_Olin, double *Olin, int NOlin, double *pos, double *W0, double *W2, double *W4, double *W6, double *W8, int Nmask, char *path_to_mask1, char *spacing_maskNGC, double *posSGC, double *W0SGC, double *W2SGC, double *W4SGC, double *W6SGC, double *W8SGC, int NmaskSGC,char *path_to_mask2, char *spacing_maskSGC,  double *k0, double *P0, double *errP0,  int NeffP0, double *k2, double *P2, double *errP2,  int NeffP2,  double *k4, double *P4, double *errP4,  int NeffP4, double *k0SGC, double *P0SGC, double *errP0SGC, int NeffP0SGC, double *k2SGC, double *P2SGC, double *errP2SGC, int NeffP2SGC,double *k4SGC, double *P4SGC, double *errP4SGC, int NeffP4SGC, double *cov, double *covSGC, double alpha_min, double alpha_max, double alpha_step, char *Sigma_def_type, char *Sigma_independent, double ffactor, double Sigma_type[], double Sigma_nl_mean[], double Sigma_nl_stddev[], int Npolynomial, int Nchunks, char *path_output, char *identifier, char *do_plot, char *do_power_spectrum, char *do_bispectrum,char *spacing_dataNGC,char *spacing_dataSGC, char *spacing_theory, int factor_sampling_mask,char *covariance_correction, int NrealNGC, int NrealSGC)
 {
+char no_mask_matrix[40];sprintf(no_mask_matrix,"no");
 int modeP0,modeP2,modeP4;
 long int l,j,i,i1,i2,imax,i_min,imax2;
 int c1,c2;
@@ -4347,7 +4352,7 @@ fftw_complex *b_pointer;b_pointer=NULL;
     fftw_plan plan2 = fftw_plan_dft_1d(Nplan,  b_pointer,  b_pointer, +1, FFTW_ESTIMATE);//reverse plan
    
 
-#pragma omp parallel for  private(Sigma_nl_mean_P0,Sigma_nl_mean_P2,Sigma_nl_mean_P4,icheck,l,j,i,i1,i2,alpha_input,alpha_input2,parameters1,parameters1_pre,parameters1_post,parameters2,parameters2_pre,parameters2_post,CHI2,prior,sigma0,step,direction,iter,sigma_trial,chi2_0,chi2_trial,convergence) shared(imax,imax2,parameter_output,dimension,k_Plin,Plin,Nlin,k_Olin,Olin,NOlin,pos,W0,W2,W4,W6,W8,Nmask,path_to_mask1,posSGC,W0SGC,W2SGC,W4SGC,W6SGC,W8SGC,NmaskSGC,path_to_mask2,k0,P0,k2,P2,k4,P4,k0SGC,P0SGC,k2SGC,P2SGC,k4SGC,P4SGC,NeffP0,NeffP0SGC,NeffP2,NeffP2SGC,NeffP4,NeffP4SGC,cov,covSGC,alpha_min,alpha_max,alpha_step,Npolynomial,Nchunks,path_output,identifier,do_plot,epsilon,plan1,plan2,type_of_analysis,fit_BAO,modeP0,modeP2,modeP4,cov0,cov2,cov4,cov0SGC,cov2SGC,cov4SGC, do_power_spectrum, do_bispectrum,type_BAO_fit,processors, Sigma_nl_mean, Sigma_nl_stddev, Sigma_type, Sigma_def_type, Sigma_independent, ffactor,Nalphas,Nsigmas_tot,Nsigmas_free,factor_sampling_mask)
+#pragma omp parallel for  private(Sigma_nl_mean_P0,Sigma_nl_mean_P2,Sigma_nl_mean_P4,icheck,l,j,i,i1,i2,alpha_input,alpha_input2,parameters1,parameters1_pre,parameters1_post,parameters2,parameters2_pre,parameters2_post,CHI2,prior,sigma0,step,direction,iter,sigma_trial,chi2_0,chi2_trial,convergence) shared(imax,imax2,parameter_output,dimension,k_Plin,Plin,Nlin,k_Olin,Olin,NOlin,pos,W0,W2,W4,W6,W8,Nmask,path_to_mask1,posSGC,W0SGC,W2SGC,W4SGC,W6SGC,W8SGC,NmaskSGC,path_to_mask2,k0,P0,k2,P2,k4,P4,k0SGC,P0SGC,k2SGC,P2SGC,k4SGC,P4SGC,NeffP0,NeffP0SGC,NeffP2,NeffP2SGC,NeffP4,NeffP4SGC,cov,covSGC,alpha_min,alpha_max,alpha_step,Npolynomial,Nchunks,path_output,identifier,do_plot,epsilon,plan1,plan2,type_of_analysis,fit_BAO,modeP0,modeP2,modeP4,cov0,cov2,cov4,cov0SGC,cov2SGC,cov4SGC, do_power_spectrum, do_bispectrum,type_BAO_fit,processors, Sigma_nl_mean, Sigma_nl_stddev, Sigma_type, Sigma_def_type, Sigma_independent, ffactor,Nalphas,Nsigmas_tot,Nsigmas_free,factor_sampling_mask,no_mask_matrix)
 for(i=0;i<imax2;i++)
 {
 
@@ -4517,9 +4522,8 @@ if(modeP0+modeP2+modeP4>1){for(j=0;j<Npolynomial+1;j++){parameters2[Nalphas+Nsig
                     }
 
 
- 
-                           CHI2=chi2_bao(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,k_Plin,Plin,Nlin,k_Olin,Olin,NOlin,pos,W0,W2,W4,W6,W8,Nmask,path_to_mask1,spacing_maskNGC,posSGC,W0SGC,W2SGC,W4SGC,W6SGC,W8SGC,NmaskSGC,path_to_mask2,spacing_maskSGC,k0,P0,NeffP0,k2,P2,NeffP2,k4,P4,NeffP4,k0SGC,P0SGC,NeffP0SGC,k2SGC,P2SGC,NeffP2SGC,k4SGC,P4SGC,NeffP4SGC,cov,covSGC,Sigma_def_type, Sigma_independent, ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev,Npolynomial,Nchunks,plan1,plan2, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,0,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory,0,0,NULL, NULL,NULL,NULL, NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,covariance_correction,NrealNGC,NrealSGC);
-    
+                           CHI2=chi2_bao(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,k_Plin,Plin,Nlin,k_Olin,Olin,NOlin,pos,W0,W2,W4,W6,W8,Nmask,path_to_mask1,spacing_maskNGC,posSGC,W0SGC,W2SGC,W4SGC,W6SGC,W8SGC,NmaskSGC,path_to_mask2,spacing_maskSGC,k0,P0,NeffP0,k2,P2,NeffP2,k4,P4,NeffP4,k0SGC,P0SGC,NeffP0SGC,k2SGC,P2SGC,NeffP2SGC,k4SGC,P4SGC,NeffP4SGC,cov,covSGC,Sigma_def_type, Sigma_independent, ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev,Npolynomial,Nchunks,plan1,plan2, do_power_spectrum, do_bispectrum,Nalphas,Nsigmas_tot,Nsigmas_free,0,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory,0,0,NULL, NULL,NULL,NULL, NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,0,NULL,no_mask_matrix,NULL,NULL,covariance_correction,NrealNGC,NrealSGC);
+  
                     for(l=0;l<dimension;l++){parameter_output[l][i]=parameters2[l];}
                         parameter_output[dimension][i]=CHI2;
 
@@ -4688,13 +4692,14 @@ parameters2 =  (double*) calloc( dimension, sizeof(double));
 for(j=0;j<dimension;j++){parameters2[j]=parameter_output[j][i_min];/*printf("%d %lf\n",j,parameters2[j]);*/}
 
 
-make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,parameter_output[dimension][i_min], k0,P0,errP0,NeffP0,k0SGC,P0SGC,errP0SGC,NeffP0SGC,k2,P2,errP2,NeffP2,k2SGC,P2SGC,errP2SGC,NeffP2SGC,k4,P4,errP4,NeffP4,k4SGC,P4SGC,errP4SGC,NeffP4SGC, k_Plin, Plin, Nlin, k_Olin, Olin, NOlin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent, ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,Npoints,Ndof, path_output, identifier,plan1,plan2,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot, Nsigmas_free,0,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL,NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL,NULL,NULL,NULL);
+make_a_bao_plot(type_BAO_fit,type_of_analysis,fit_BAO,parameters2,parameter_output[dimension][i_min], k0,P0,errP0,NeffP0,k0SGC,P0SGC,errP0SGC,NeffP0SGC,k2,P2,errP2,NeffP2,k2SGC,P2SGC,errP2SGC,NeffP2SGC,k4,P4,errP4,NeffP4,k4SGC,P4SGC,errP4SGC,NeffP4SGC, k_Plin, Plin, Nlin, k_Olin, Olin, NOlin, pos, W0,W2,W4,W6,W8, Nmask, path_to_mask1,spacing_maskNGC, posSGC, W0SGC,W2SGC,W4SGC,W6SGC,W8SGC, NmaskSGC, path_to_mask2,spacing_maskSGC, Sigma_def_type, Sigma_independent, ffactor, Sigma_type, Sigma_nl_mean, Sigma_nl_stddev, Npolynomial, Nchunks,Npoints,Ndof, path_output, identifier,plan1,plan2,do_power_spectrum,do_bispectrum,Nalphas,Nsigmas_tot, Nsigmas_free,0,factor_sampling_mask,spacing_dataNGC,spacing_dataSGC,spacing_theory, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL,NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL,no_mask_matrix,NULL,NULL);
 
 free(parameters2);
     }
 
 time_fin=time(NULL);
 time_run=(time_fin-time_ini)/(60.*60.);//in hours
+
 
 do_log_file2(path_output,identifier,name_output,fit_BAO,Nchunks,Npolynomial,time_run,processors,alpha_min, alpha_max, alpha_step,Nalphas,Nsigmas_tot);
 
