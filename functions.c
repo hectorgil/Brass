@@ -834,7 +834,7 @@ if(interpolation_order==2){Pout=P_interpol_w012_singlearray(P,Ninterpol,w0,w1,w2
 return Pout;
 }
 
-double get_error2(double *alpha, double *chi2, double chi2min, int imin,int N)
+double get_error2(double *alpha, double *chi2, double chi2min, int imin,int N, double Deltachi2)
 {
 int l;
 double m,n;
@@ -842,10 +842,10 @@ int lpivot=-1;
 double error=0;
 for(l=N-1;l>1;l--)
 {
-if(chi2[l]-chi2min-1>0 && chi2[l-1]-chi2min-1<=0){
+if(chi2[l]-chi2min-Deltachi2>0 && chi2[l-1]-chi2min-Deltachi2<=0){
 lpivot=l;//printf("lpivot=%d\n",l);
 }
-if(chi2[l]-chi2min-1<0 && chi2[l-1]-chi2min-1>=0){
+if(chi2[l]-chi2min-Deltachi2<0 && chi2[l-1]-chi2min-Deltachi2>=0){
 lpivot=l;//printf("lpivot=%d\n",l);
 }
 
@@ -854,7 +854,7 @@ if(lpivot==-1){/*printf("Error in get error1. Set error to 0\n");*/error=0;}
 else{
 m=(alpha[lpivot]-alpha[lpivot-1])/(chi2[lpivot]-chi2[lpivot-1]);
 n=alpha[lpivot]-m*chi2[lpivot];
-error=-( (chi2min+1)*m+n   )+alpha[imin];
+error=-( (chi2min+Deltachi2)*m+n   )+alpha[imin];
 }
 //printf("%lf %d\n",error,lpivot);
 
@@ -862,7 +862,7 @@ if(error<0){error=0;}
 return error;
 }
 
-double get_error1(double *alpha, double *chi2, double chi2min, int imin, int N)
+double get_error1(double *alpha, double *chi2, double chi2min, int imin, int N, double Deltachi2)
 {
 int l;
 double m,n;
@@ -873,10 +873,10 @@ lpivot=-1;
 error=0;
 for(l=0;l<N-1;l++)
 {
-if(chi2[l]-chi2min-1<0 && chi2[l+1]-chi2min-1>=0){
+if(chi2[l]-chi2min-Deltachi2<0 && chi2[l+1]-chi2min-Deltachi2>=0){
 lpivot=l;
 }
-if(chi2[l]-chi2min-1>0 && chi2[l+1]-chi2min-1<=0){
+if(chi2[l]-chi2min-Deltachi2>0 && chi2[l+1]-chi2min-Deltachi2<=0){
 lpivot=l;
 }
 }
@@ -884,7 +884,7 @@ if(lpivot==-1){/*printf("Error in get error2. Set error to 0\n");*/error=0;}
 else{
 m=(alpha[lpivot]-alpha[lpivot+1])/(chi2[lpivot]-chi2[lpivot+1]);
 n=alpha[lpivot]-m*chi2[lpivot];
-error=( (chi2min+1)*m+n   )-alpha[imin];
+error=( (chi2min+Deltachi2)*m+n   )-alpha[imin];
 }
 
 return error;
