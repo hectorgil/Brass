@@ -7,9 +7,9 @@ void determine_spacing_theo(char *spacing,double *k0,int N,int mode);
 
 void determine_spacing(char *spacing,double *k0, double *k2, double *k4,int NeffP0,int NeffP2,int NeffP4);
 
-double get_error1(double *alpha, double *chi2, double chi2min, int imin, int N);
+double get_error1(double *alpha, double *chi2, double chi2min, int imin, int N, double D);
 
-double get_error2(double *alpha, double *chi2, double chi2min, int imin, int N);
+double get_error2(double *alpha, double *chi2, double chi2min, int imin, int N, double D);
 
 void string_copy(char *from, char *to);
 
