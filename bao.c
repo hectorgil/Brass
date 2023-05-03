@@ -549,8 +549,8 @@ fclose(f);
 
 if(modeP0+modeP2+modeP4==1){
 
-errorA_alpha1=get_error1(alpha1,chi2_value,chi2min,imin,Nlines);
-errorB_alpha1=get_error2(alpha1,chi2_value,chi2min,imin,Nlines);
+errorA_alpha1=get_error1(alpha1,chi2_value,chi2min,imin,Nlines,1.0);
+errorB_alpha1=get_error2(alpha1,chi2_value,chi2min,imin,Nlines,1.0);
 }
 
 if(modeP0+modeP2+modeP4>1){
@@ -566,11 +566,11 @@ else{if(chi2min2>chi2_value22[i]){chi2min2=chi2_value22[i];l2min=i;}}
 }
 
 //printf("%lf %d %d\n",chi2min,l1min,Nlines1);
-errorA_alpha1=get_error1(alpha11,chi2_value11,chi2min,l1min,Nlines1);
-errorB_alpha1=get_error2(alpha11,chi2_value11,chi2min,l1min,Nlines1);
+errorA_alpha1=get_error1(alpha11,chi2_value11,chi2min,l1min,Nlines1,2.30);
+errorB_alpha1=get_error2(alpha11,chi2_value11,chi2min,l1min,Nlines1,2.30);
 //exit(0);
-errorA_alpha2=get_error1(alpha22,chi2_value22,chi2min,l2min,Nlines1);
-errorB_alpha2=get_error2(alpha22,chi2_value22,chi2min,l2min,Nlines1);
+errorA_alpha2=get_error1(alpha22,chi2_value22,chi2min,l2min,Nlines1,2.30);
+errorB_alpha2=get_error2(alpha22,chi2_value22,chi2min,l2min,Nlines1,2.30);
 
 }
 
