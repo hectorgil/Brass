@@ -6,7 +6,7 @@
 #k-range for P0 computation (double/double): 0.02 0.30
 #k-range for P2 computation (double/double): 0.02 0.30
 #k-range for P4 computation (double/double): 0.02 0.30
-#FIT FS to P0/P2/P4/P02/P024/P24/P04: P02
+#FIT FS to P0/P2/P4/P02/P024/P24/P04: P024
 #k-range for P0 computation (double/double): 0.02 0.15
 #k-range for P2 computation (double/double): 0.02 0.15
 #k-range for P4 computation (double/double): 0.02 0.15
@@ -70,7 +70,7 @@
 
 #FS priors/options
 #Apply noise in the model or subtract it in the data (model/data): data
-#Anoise (flat/gaussian): gaussian
+#Anoise (flat/gaussian): flat
 #Anoise (mean/devstd): 1 0.30
 #b2 (flat/gaussian): flat
 #b2 (mean/devstd): 5 2.5
@@ -96,15 +96,15 @@
 
 #For FS mcmc fit
 #Input file from PTcool: /home/DATA/hector/boss_eboss_final/ptcool/Perturbation_theory_eboss_comb_z070_matterpower.txt
-#Type of PT-Model (linear/1L-SPT/2L-SPT/1L-RPT/2L-RPT): 2L-RPT
+#Type of PT-Model (linear/1L-SPT/2L-SPT/1L-RPT/2L-RPT): 1L-SPT
 #Type of RSD-model (Kaiser87/Scoccimarro04/TNS10): TNS10
 #Type of FoG-model (Exponential/Lorentzian/Exponential_avir): Lorentzian
 #Type of model for bispectrum (tree-level/1L-SPT/GilMarin14/GEO23): GilMarin14
 #Redshift input for GEO model: 0.5
 #Lagrangian local bias b2s2 (yes/no/off): yes
 #Lagrangian local bias b3nl (yes/no/off): yes
-#RSD-fit (yes/no/shape/shape2): shape
-#sigma8 free parameter (yes/no): yes
+#RSD-fit (yes/no/shape/shape2): yes
+#sigma8 free parameter (yes/no): no
 #FoG free parameter (yes/no): yes
 #Same FoG parameter for bispectrum (yes/no): no
 
