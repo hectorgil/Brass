@@ -3442,6 +3442,12 @@ for(i=0;i<Ncov;i++)
       {
        
               ch2=ch2+difference[i]*1./cov[i+Ncov*j]*difference[j];
+//if(i<indexP && j<indexP){ch2P=ch2P+difference[i]*1./cov[i+Ncov*j]*difference[j]}
+//if(i>indexP && j>indexP){ch2B=ch2B+difference[i]*1./cov[i+Ncov*j]*difference[j]}   
+//if(i<indexP && j>indexP){ch2PB1=chi2PB1+difference[i]*1./cov[i+Ncov*j]*difference[j]} 
+//if(i>indexP && j<indexP){ch2PB2=chi2PB2+difference[i]*1./cov[i+Ncov*j]*difference[j]} 
+
+         
       }
 
 }
