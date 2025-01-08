@@ -3432,6 +3432,11 @@ ptheo=P_interpol_fast(k0[j],P_theo0,Neffmax*factor_sampling_mask,spacing_dataNGC
 
 ch2=0;
 //ch2_diag=0;
+//double ch2P=0;
+//double ch2B=0;
+//double ch2PB1=0;
+//double ch2PB2=0;
+//int indexP=30;//????
 
 //Apply Compression Here!
 
@@ -3443,14 +3448,16 @@ for(i=0;i<Ncov;i++)
        
               ch2=ch2+difference[i]*1./cov[i+Ncov*j]*difference[j];
 //if(i<indexP && j<indexP){ch2P=ch2P+difference[i]*1./cov[i+Ncov*j]*difference[j]}
-//if(i>indexP && j>indexP){ch2B=ch2B+difference[i]*1./cov[i+Ncov*j]*difference[j]}   
-//if(i<indexP && j>indexP){ch2PB1=chi2PB1+difference[i]*1./cov[i+Ncov*j]*difference[j]} 
-//if(i>indexP && j<indexP){ch2PB2=chi2PB2+difference[i]*1./cov[i+Ncov*j]*difference[j]} 
+//if(i>=indexP && j>=indexP){ch2B=ch2B+difference[i]*1./cov[i+Ncov*j]*difference[j]}   
+//if(i<indexP && j>=indexP){ch2PB1=chi2PB1+difference[i]*1./cov[i+Ncov*j]*difference[j]} 
+//if(i>=indexP && j<indexP){ch2PB2=chi2PB2+difference[i]*1./cov[i+Ncov*j]*difference[j]} 
 
          
       }
 
 }
+
+//printf("Total chi2=%lf, chi2P=%lf, chi2B=%lf, chi2PB=%lf\n",ch2,ch2P,ch2B,ch2PB1+ch2PB2);
 
 if(strcmp(covariance_correction,"Sellentin-Heavens") == 0)
 {
